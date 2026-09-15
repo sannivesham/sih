@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SIH Hackathon Portal - Application Controller & Interactive Cadastral GIS Map
  * Problem Statement ID: 26018 - Intelligent Land Record Digitization and Validation System
  * Organization: Sannivesham
@@ -12,10 +12,12 @@ let streetLayer = null;
 let parcelsLayerGroup = null;
 let activeMarkerPin = null;
 let selectedParcelFeature = null;
+let activeCategories = new Set(["clear", "commercial", "dispute", "govt", "water"]);
 
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   initCadastralMap();
+  initCategoryFilters();
   initSearchAndPills();
   initRegionSwitcher();
   initDeedModal();
@@ -135,7 +137,7 @@ function initCadastralMap() {
 }
 
 /**
- * Render GeoJSON Land Parcels with Dynamic Classification Colors
+ * Render GeoJSON Land Parcels with Dynamic Classification Colors & Category Filter
  */
 function renderCadastralPolygons() {
   if (!map || typeof TELUGU_LAND_REGISTRY === "undefined") return;
@@ -144,7 +146,19 @@ function renderCadastralPolygons() {
     map.removeLayer(parcelsLayerGroup);
   }
 
-  parcelsLayerGroup = L.geoJSON(TELUGU_LAND_REGISTRY.parcels, {
+  // Filter features according to active checked categories
+  const allFeatures = TELUGU_LAND_REGISTRY.parcels.features;
+  const filteredFeatures = allFeatures.filter(f => activeCategories.has(f.properties.statusCode));
+
+  // Update Category Counts & Total in Filter HUD
+  updateCategoryCounts(allFeatures, filteredFeatures);
+
+  const filteredGeoJson = {
+    type: "FeatureCollection",
+    features: filteredFeatures
+  };
+
+  parcelsLayerGroup = L.geoJSON(filteredGeoJson, {
     style: function(feature) {
       const status = feature.properties.statusCode;
       let strokeColor = "#10b981"; // Emerald green for clear
@@ -157,8 +171,11 @@ function renderCadastralPolygons() {
         strokeColor = "#f59e0b"; // Amber
         fillColor = "#f59e0b";
       } else if (status === "govt") {
-        strokeColor = "#8b5cf6"; // Purple
-        fillColor = "#8b5cf6";
+        strokeColor = "#a855f7"; // Purple
+        fillColor = "#a855f7";
+      } else if (status === "water") {
+        strokeColor = "#3b82f6"; // Blue
+        fillColor = "#3b82f6";
       }
 
       return {
@@ -207,6 +224,86 @@ function renderCadastralPolygons() {
       });
     }
   }).addTo(map);
+}
+
+/**
+ * Initialize Interactive Category Checkbox Filter in Legend
+ */
+function initCategoryFilters() {
+  const checkboxes = document.querySelectorAll(".cat-checkbox");
+  const allBtn = document.getElementById("filter-all-btn");
+  const noneBtn = document.getElementById("filter-none-btn");
+
+  checkboxes.forEach(chk => {
+    chk.addEventListener("change", (e) => {
+      const code = e.target.value;
+      const itemRow = e.target.closest(".legend-filter-item");
+
+      if (e.target.checked) {
+        activeCategories.add(code);
+        if (itemRow) itemRow.classList.remove("dimmed");
+      } else {
+        activeCategories.delete(code);
+        if (itemRow) itemRow.classList.add("dimmed");
+      }
+
+      renderCadastralPolygons();
+
+      if (activeCategories.size === 0) {
+        showToast("All land categories deselected. No parcels shown.");
+      } else {
+        showToast(`Filter updated: ${activeCategories.size} categories active`);
+      }
+    });
+  });
+
+  // "All" Button - Select all categories
+  if (allBtn) {
+    allBtn.addEventListener("click", () => {
+      checkboxes.forEach(chk => {
+        chk.checked = true;
+        activeCategories.add(chk.value);
+        const itemRow = chk.closest(".legend-filter-item");
+        if (itemRow) itemRow.classList.remove("dimmed");
+      });
+      renderCadastralPolygons();
+      showToast("Showing all land categories");
+    });
+  }
+
+  // "None" Button - Deselect all categories
+  if (noneBtn) {
+    noneBtn.addEventListener("click", () => {
+      checkboxes.forEach(chk => {
+        chk.checked = false;
+        activeCategories.delete(chk.value);
+        const itemRow = chk.closest(".legend-filter-item");
+        if (itemRow) itemRow.classList.add("dimmed");
+      });
+      renderCadastralPolygons();
+      showToast("Deselected all categories");
+    });
+  }
+}
+
+/**
+ * Update parcel counts in the filter legend
+ */
+function updateCategoryCounts(allFeatures, filteredFeatures) {
+  const counts = { clear: 0, commercial: 0, dispute: 0, govt: 0, water: 0 };
+
+  allFeatures.forEach(f => {
+    const sc = f.properties.statusCode;
+    if (counts[sc] !== undefined) {
+      counts[sc]++;
+    }
+  });
+
+  Object.keys(counts).forEach(k => {
+    setText(`count-${k}`, counts[k].toString());
+  });
+
+  setText("active-parcel-count", `${filteredFeatures.length} of ${allFeatures.length} Plots`);
 }
 
 /**

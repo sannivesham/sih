@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
@@ -137,24 +137,69 @@
               </div>
             </div>
 
-            <!-- Floating Map Legend -->
-            <div class="map-floating-legend">
-              <div class="legend-title">Cadastral Classification</div>
-              <div class="legend-item">
-                <span class="legend-color color-clear"></span>
-                <span>Clear Agricultural (పట్టాదారు)</span>
+            <!-- Floating Map Legend & Interactive Category Filter -->
+            <div class="map-floating-legend" id="map-filter-legend">
+              <div class="legend-header">
+                <div class="legend-title-row">
+                  <span class="legend-title">Cadastral Filter</span>
+                  <span class="legend-badge-count" id="active-parcel-count">8 Plots</span>
+                </div>
+                <div class="legend-btn-group">
+                  <button type="button" class="legend-filter-btn" id="filter-all-btn" title="Select All Categories">All</button>
+                  <button type="button" class="legend-filter-btn" id="filter-none-btn" title="Deselect All Categories">None</button>
+                </div>
               </div>
-              <div class="legend-item">
-                <span class="legend-color color-commercial"></span>
-                <span>Commercial / Highway</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-color color-dispute"></span>
-                <span>Under Mutation / Verification</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-color color-govt"></span>
-                <span>Govt / Grama Kantham (22-A)</span>
+
+              <div class="legend-checkbox-list" id="legend-checkbox-list">
+                <label class="legend-filter-item" data-code="clear">
+                  <input type="checkbox" class="cat-checkbox" value="clear" checked />
+                  <span class="legend-color color-clear"></span>
+                  <span class="legend-text">
+                    <strong class="cat-name-en">Clear Agricultural</strong>
+                    <span class="cat-name-te">పట్టాదారు వ్యవసాయం</span>
+                  </span>
+                  <span class="cat-count" id="count-clear">4</span>
+                </label>
+
+                <label class="legend-filter-item" data-code="commercial">
+                  <input type="checkbox" class="cat-checkbox" value="commercial" checked />
+                  <span class="legend-color color-commercial"></span>
+                  <span class="legend-text">
+                    <strong class="cat-name-en">Commercial / Highway</strong>
+                    <span class="cat-name-te">వాణిజ్య స్థలం</span>
+                  </span>
+                  <span class="cat-count" id="count-commercial">2</span>
+                </label>
+
+                <label class="legend-filter-item" data-code="dispute">
+                  <input type="checkbox" class="cat-checkbox" value="dispute" checked />
+                  <span class="legend-color color-dispute"></span>
+                  <span class="legend-text">
+                    <strong class="cat-name-en">Under Mutation / Dispute</strong>
+                    <span class="cat-name-te">వివాదాస్పద పరిశీలన</span>
+                  </span>
+                  <span class="cat-count" id="count-dispute">2</span>
+                </label>
+
+                <label class="legend-filter-item" data-code="govt">
+                  <input type="checkbox" class="cat-checkbox" value="govt" checked />
+                  <span class="legend-color color-govt"></span>
+                  <span class="legend-text">
+                    <strong class="cat-name-en">Govt / Grama Kantham</strong>
+                    <span class="cat-name-te">ప్రభుత్వ స్థలం (22-A)</span>
+                  </span>
+                  <span class="cat-count" id="count-govt">2</span>
+                </label>
+
+                <label class="legend-filter-item" data-code="water">
+                  <input type="checkbox" class="cat-checkbox" value="water" checked />
+                  <span class="legend-color color-water"></span>
+                  <span class="legend-text">
+                    <strong class="cat-name-en">Water Body / Lake</strong>
+                    <span class="cat-name-te">చెరువు / కుంట (FTL)</span>
+                  </span>
+                  <span class="cat-count" id="count-water">1</span>
+                </label>
               </div>
             </div>
 
