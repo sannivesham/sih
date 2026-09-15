@@ -1,14 +1,26 @@
 ﻿/**
- * SIH Hackathon Portal - Application Controller
+ * SIH Hackathon Portal - Application Controller & Interactive Cadastral GIS Map
  * Problem Statement ID: 26018 - Intelligent Land Record Digitization and Validation System
  * Organization: Sannivesham
  */
 
+// Global State
+let map = null;
+let currentTileLayer = null;
+let satelliteLayer = null;
+let streetLayer = null;
+let parcelsLayerGroup = null;
+let activeMarkerPin = null;
+let selectedParcelFeature = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
+  initCadastralMap();
+  initSearchAndPills();
+  initRegionSwitcher();
+  initDeedModal();
   hydrateProblemMetadata();
   hydrateTables();
-  initSimulator();
   hydrateDashboard();
   initArchitectureSteps();
 });
@@ -45,6 +57,454 @@ function updateThemeIcon(theme) {
 }
 
 /**
+ * Initialize Interactive Cadastral Leaflet Map
+ */
+function initCadastralMap() {
+  const mapContainer = document.getElementById("cadastral-map");
+  if (!mapContainer || typeof L === "undefined") return;
+
+  // Default Center: Rustumpet, Narsapur, Telangana
+  const defaultCenter = [17.7385, 78.2835];
+  const defaultZoom = 16;
+
+  map = L.map("cadastral-map", {
+    center: defaultCenter,
+    zoom: defaultZoom,
+    minZoom: 12,
+    maxZoom: 19,
+    zoomControl: false
+  });
+
+  // Custom Zoom Control top-right
+  L.control.zoom({ position: "topright" }).addTo(map);
+
+  // Satellite Imagery Layer (Esri World Imagery)
+  satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Tiles &copy; Esri &mdash; National Geographic, DeLorme, NAVTEQ",
+      maxZoom: 19
+    }
+  );
+
+  // Standard OpenStreetMap Streets Layer
+  streetLayer = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 19
+    }
+  );
+
+  // Set default to Satellite view for true cadastral satellite experience!
+  satelliteLayer.addTo(map);
+  currentTileLayer = satelliteLayer;
+
+  // Layer Switcher Buttons
+  const satBtn = document.getElementById("layer-sat-btn");
+  const streetBtn = document.getElementById("layer-street-btn");
+
+  if (satBtn && streetBtn) {
+    satBtn.addEventListener("click", () => {
+      map.removeLayer(streetLayer);
+      map.addLayer(satelliteLayer);
+      satBtn.classList.add("active");
+      streetBtn.classList.remove("active");
+      showToast("Switched to High-Resolution Satellite Imagery");
+    });
+
+    streetBtn.addEventListener("click", () => {
+      map.removeLayer(satelliteLayer);
+      map.addLayer(streetLayer);
+      streetBtn.classList.add("active");
+      satBtn.classList.remove("active");
+      showToast("Switched to Street Map View");
+    });
+  }
+
+  // Render Cadastral Land Polygons
+  renderCadastralPolygons();
+
+  // Zoom hint update
+  map.on("zoomend", () => {
+    const hint = document.getElementById("map-zoom-text");
+    if (hint) {
+      hint.textContent = `Current Zoom: ${map.getZoom()} | High-Precision Cadastral Mesh Active`;
+    }
+  });
+}
+
+/**
+ * Render GeoJSON Land Parcels with Dynamic Classification Colors
+ */
+function renderCadastralPolygons() {
+  if (!map || typeof TELUGU_LAND_REGISTRY === "undefined") return;
+
+  if (parcelsLayerGroup) {
+    map.removeLayer(parcelsLayerGroup);
+  }
+
+  parcelsLayerGroup = L.geoJSON(TELUGU_LAND_REGISTRY.parcels, {
+    style: function(feature) {
+      const status = feature.properties.statusCode;
+      let strokeColor = "#10b981"; // Emerald green for clear
+      let fillColor = "#10b981";
+
+      if (status === "commercial") {
+        strokeColor = "#06b6d4"; // Cyan
+        fillColor = "#06b6d4";
+      } else if (status === "dispute") {
+        strokeColor = "#f59e0b"; // Amber
+        fillColor = "#f59e0b";
+      } else if (status === "govt") {
+        strokeColor = "#8b5cf6"; // Purple
+        fillColor = "#8b5cf6";
+      }
+
+      return {
+        color: strokeColor,
+        weight: 2.5,
+        opacity: 0.9,
+        fillColor: fillColor,
+        fillOpacity: 0.28,
+        dashArray: status === "dispute" ? "5, 5" : null
+      };
+    },
+    onEachFeature: function(feature, layer) {
+      const p = feature.properties;
+
+      // Tooltip with Survey No and Owner
+      layer.bindTooltip(`
+        <div class="parcel-tooltip-label">
+          <strong>సర్వే ${p.surveyNo}</strong><br/>
+          <span>${p.ownerName}</span>
+        </div>
+      `, {
+        permanent: false,
+        direction: "center",
+        className: "custom-leaflet-tooltip"
+      });
+
+      // Hover Effects
+      layer.on({
+        mouseover: function(e) {
+          const l = e.target;
+          l.setStyle({
+            weight: 4,
+            fillOpacity: 0.55,
+            color: "#ffffff"
+          });
+          if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            l.bringToFront();
+          }
+        },
+        mouseout: function(e) {
+          parcelsLayerGroup.resetStyle(e.target);
+        },
+        click: function() {
+          selectLandParcel(feature);
+        }
+      });
+    }
+  }).addTo(map);
+}
+
+/**
+ * Handle Selection of a Land Parcel (Opens Slide-in Drawer)
+ */
+function selectLandParcel(feature) {
+  selectedParcelFeature = feature;
+  const p = feature.properties;
+
+  // Fly to parcel center
+  if (p.center && map) {
+    map.flyTo(p.center, 17, { duration: 1.2 });
+  }
+
+  // Populate Slide-in Drawer
+  setText("drawer-survey-no", p.surveyNo);
+  setText("drawer-owner-en", p.ownerName);
+  setText("drawer-owner-te", p.ownerNameTe);
+  setText("drawer-relation", `S/o or W/o: ${p.guardianName}`);
+  setText("drawer-extent", `${p.extentText} (${p.extentAcres} Ac)`);
+  setText("drawer-khata", p.khataNo);
+  setText("drawer-class", p.landClassification);
+  setText("drawer-ulpin", p.ulpin);
+  setText("drawer-market-val", p.totalMarketValue);
+  setText("drawer-status", p.status);
+  setText("drawer-mutation-date", p.mutationDate);
+  setText("drawer-deed-snippet", p.deedSnippet);
+
+  // Status styling
+  const statusEl = document.getElementById("drawer-status");
+  if (statusEl) {
+    if (p.statusCode === "clear") {
+      statusEl.style.color = "var(--accent-green)";
+    } else if (p.statusCode === "dispute") {
+      statusEl.style.color = "var(--accent-amber)";
+    } else {
+      statusEl.style.color = "var(--accent-purple)";
+    }
+  }
+
+  // Open Drawer
+  const drawer = document.getElementById("land-details-drawer");
+  if (drawer) {
+    drawer.classList.add("open");
+  }
+
+  // Google Maps directions link
+  const navBtn = document.getElementById("drawer-nav-btn");
+  if (navBtn && p.center) {
+    navBtn.setAttribute("href", `https://www.google.com/maps/search/?api=1&query=${p.center[0]},${p.center[1]}`);
+    navBtn.setAttribute("target", "_blank");
+  }
+
+  showToast(`Loaded Land Record for Survey No: ${p.surveyNo} (${p.ownerName})`);
+}
+
+/**
+ * Search by Survey Number, Owner Name, or Coordinates (Lat, Long)
+ */
+function initSearchAndPills() {
+  const searchInput = document.getElementById("hud-search-input");
+  const searchBtn = document.getElementById("hud-search-btn");
+  const drawerCloseBtn = document.getElementById("drawer-close-btn");
+  const quickPills = document.querySelectorAll(".coord-chip");
+
+  // Close drawer
+  if (drawerCloseBtn) {
+    drawerCloseBtn.addEventListener("click", () => {
+      const drawer = document.getElementById("land-details-drawer");
+      if (drawer) drawer.classList.remove("open");
+      if (activeMarkerPin && map) {
+        map.removeLayer(activeMarkerPin);
+        activeMarkerPin = null;
+      }
+    });
+  }
+
+  // Quick Chips Click
+  quickPills.forEach(pill => {
+    pill.addEventListener("click", () => {
+      const val = pill.getAttribute("data-query");
+      if (searchInput) searchInput.value = val;
+      executeSearch(val);
+    });
+  });
+
+  // Search Button Click & Enter Key
+  if (searchBtn && searchInput) {
+    searchBtn.addEventListener("click", () => {
+      executeSearch(searchInput.value.trim());
+    });
+
+    searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        executeSearch(searchInput.value.trim());
+      }
+    });
+  }
+}
+
+function executeSearch(query) {
+  if (!query) {
+    showToast("Please enter a Survey No, Owner Name, or Coordinates (lat, lng)");
+    return;
+  }
+
+  // Check if query is Coordinates: e.g. "17.7382, 78.2828" or "17.7382 78.2828"
+  const coordRegex = /^(-?\d+(\.\d+)?)[,\s]+(-?\d+(\.\d+)?)$/;
+  const match = query.match(coordRegex);
+
+  if (match) {
+    const lat = parseFloat(match[1]);
+    const lng = parseFloat(match[3]);
+
+    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      locateCoordinates(lat, lng);
+      return;
+    }
+  }
+
+  // Otherwise search by Survey Number or Owner Name
+  const parcels = TELUGU_LAND_REGISTRY.parcels.features;
+  const qLower = query.toLowerCase();
+
+  const found = parcels.find(f => 
+    f.properties.surveyNo.toLowerCase().includes(qLower) ||
+    f.properties.ownerName.toLowerCase().includes(qLower) ||
+    f.properties.ownerNameTe.includes(query) ||
+    f.properties.khataNo.toLowerCase().includes(qLower) ||
+    f.properties.ulpin.toLowerCase().includes(qLower)
+  );
+
+  if (found) {
+    selectLandParcel(found);
+  } else {
+    showToast(`No parcel found matching "${query}". Try sample chips below!`);
+  }
+}
+
+/**
+ * Coordinate Search & Radar Pin Drop
+ */
+function locateCoordinates(lat, lng) {
+  if (!map) return;
+
+  // Drop pulsating radar marker
+  if (activeMarkerPin) {
+    map.removeLayer(activeMarkerPin);
+  }
+
+  const radarIcon = L.divIcon({
+    className: "pulse-marker-wrap",
+    html: `<div class="pulse-marker-pin" title="${lat}, ${lng}"></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+
+  activeMarkerPin = L.marker([lat, lng], { icon: radarIcon }).addTo(map);
+
+  // Smooth flyTo coordinates
+  map.flyTo([lat, lng], 17, { duration: 1.5 });
+
+  // Find nearest parcel to these coordinates
+  const parcels = TELUGU_LAND_REGISTRY.parcels.features;
+  let closestParcel = null;
+  let minDistance = Infinity;
+
+  parcels.forEach(f => {
+    if (f.properties.center) {
+      const dLat = f.properties.center[0] - lat;
+      const dLng = f.properties.center[1] - lng;
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestParcel = f;
+      }
+    }
+  });
+
+  if (closestParcel && minDistance < 0.008) {
+    setTimeout(() => {
+      selectLandParcel(closestParcel);
+    }, 900);
+    showToast(`Located Parcel Survey ${closestParcel.properties.surveyNo} at GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}!`);
+  } else {
+    showToast(`GPS Pin dropped at [${lat.toFixed(4)}, ${lng.toFixed(4)}]`);
+  }
+}
+
+/**
+ * Region Switcher (Medak/Telangana vs Mangalagiri/AP)
+ */
+function initRegionSwitcher() {
+  const regButtons = document.querySelectorAll(".region-btn");
+  if (!regButtons || !map) return;
+
+  regButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      regButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const regionId = btn.getAttribute("data-region");
+      const region = TELUGU_LAND_REGISTRY.regions.find(r => r.id === regionId);
+
+      if (region && map) {
+        map.flyTo(region.center, region.zoom, { duration: 1.5 });
+        showToast(`Navigated to ${region.name}`);
+
+        // Automatically select the first parcel in this region
+        const parcel = TELUGU_LAND_REGISTRY.parcels.features.find(f => {
+          if (regionId.startsWith("telangana") && f.id.startsWith("TS-")) return true;
+          if (regionId.startsWith("andhra") && f.id.startsWith("AP-")) return true;
+          return false;
+        });
+
+        if (parcel) {
+          setTimeout(() => selectLandParcel(parcel), 1200);
+        }
+      }
+    });
+  });
+}
+
+/**
+ * Scanned Patta Deed Modal with OCR Bounding Boxes
+ */
+function initDeedModal() {
+  const openBtn = document.getElementById("drawer-view-deed-btn");
+  const modal = document.getElementById("deed-modal-backdrop");
+  const closeBtn = document.getElementById("modal-close-btn");
+  const passbookBtn = document.getElementById("drawer-download-passbook-btn");
+
+  if (openBtn && modal) {
+    openBtn.addEventListener("click", () => {
+      if (!selectedParcelFeature) return;
+      const p = selectedParcelFeature.properties;
+
+      setText("modal-deed-title", `Digitized Land Deed & RoR: Survey ${p.surveyNo}`);
+      setText("ocr-survey-box", p.surveyNo);
+      setText("ocr-owner-box", `${p.ownerNameTe} (${p.ownerName})`);
+      setText("ocr-guardian-box", p.guardianName);
+      setText("ocr-extent-box", p.extentText);
+      setText("ocr-khata-box", p.khataNo);
+      setText("ocr-village-box", `${p.village}, ${p.mandal}, ${p.district}`);
+      setText("ocr-ulpin-box", p.ulpin);
+
+      modal.classList.add("open");
+    });
+  }
+
+  if (closeBtn && modal) {
+    closeBtn.addEventListener("click", () => {
+      modal.classList.remove("open");
+    });
+  }
+
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.remove("open");
+    });
+  }
+
+  // Download Digital Passbook Simulation
+  if (passbookBtn) {
+    passbookBtn.addEventListener("click", () => {
+      if (!selectedParcelFeature) return;
+      const p = selectedParcelFeature.properties;
+      const passbookContent = {
+        title: "Government of India / DILRMP Digital Land Passbook (Bhu-Aadhaar)",
+        state: p.state,
+        district: p.district,
+        mandal: p.mandal,
+        village: p.village,
+        surveyNo: p.surveyNo,
+        pattadarName: `${p.ownerName} (${p.ownerNameTe})`,
+        guardianName: p.guardianName,
+        totalExtent: p.extentText,
+        classification: p.landClassification,
+        khataNumber: p.khataNo,
+        ulpinBhuAadhaar: p.ulpin,
+        digitalSignatureHash: "SHA256-" + Math.random().toString(36).substring(2, 12).toUpperCase(),
+        issuedOn: new Date().toLocaleDateString("en-IN")
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(passbookContent, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Bhu-Aadhaar-Passbook-${p.surveyNo.replace('/', '_')}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast(`Digital Bhu-Aadhaar Passbook generated for Survey ${p.surveyNo}!`);
+    });
+  }
+}
+
+/**
  * Hydrate Problem Metadata from SIH_CONFIG
  */
 function hydrateProblemMetadata() {
@@ -61,21 +521,8 @@ function hydrateProblemMetadata() {
   setText("problem-title-display", cfg.problemStatement.title);
   setText("problem-desc-lead", cfg.problemStatement.background);
 
-  // GitHub links
   const ghLinks = document.querySelectorAll(".sih-gh-link");
   ghLinks.forEach(el => el.setAttribute("href", cfg.event.githubRepo));
-
-  // Metrics
-  const metricsContainer = document.getElementById("metrics-container");
-  if (metricsContainer && cfg.metrics) {
-    metricsContainer.innerHTML = cfg.metrics.map(m => `
-      <div class="metric-card">
-        <div class="metric-value">${m.value}</div>
-        <div class="metric-label">${m.label}</div>
-        <div class="metric-note">${m.note}</div>
-      </div>
-    `).join("");
-  }
 
   // Objectives
   const objContainer = document.getElementById("objectives-container");
@@ -147,139 +594,6 @@ function hydrateTables() {
 }
 
 /**
- * Interactive Land Record Digitizer Simulator
- */
-let currentRecordIndex = 0;
-
-function initSimulator() {
-  const cfg = window.SIH_CONFIG;
-  if (!cfg || !cfg.sampleRecords) return;
-
-  const strip = document.getElementById("sample-selector-strip");
-  if (strip) {
-    strip.innerHTML = `
-      <span class="sample-strip-label">Select Sample Record:</span>
-      ${cfg.sampleRecords.map((r, i) => `
-        <button class="sample-btn ${i === 0 ? 'active' : ''}" data-idx="${i}">
-          ${r.name}
-        </button>
-      `).join("")}
-    `;
-
-    strip.addEventListener("click", (e) => {
-      const btn = e.target.closest(".sample-btn");
-      if (!btn) return;
-      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentRecordIndex = parseInt(btn.dataset.idx, 10);
-      renderRecord(cfg.sampleRecords[currentRecordIndex], true);
-    });
-  }
-
-  // Action Buttons
-  const approveBtn = document.getElementById("sim-approve-btn");
-  if (approveBtn) {
-    approveBtn.addEventListener("click", () => {
-      const rec = cfg.sampleRecords[currentRecordIndex];
-      const mockHash = "SHA256-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-      showToast(`Record ${rec.id} Approved & Synced with DILRMP! (Hash: ${mockHash})`);
-      document.getElementById("sim-status-text").textContent = "DILRMP Verified";
-      const hitlAlert = document.getElementById("hitl-alert-strip");
-      if (hitlAlert) hitlAlert.classList.remove("visible");
-    });
-  }
-
-  const exportBtn = document.getElementById("sim-export-btn");
-  if (exportBtn) {
-    exportBtn.addEventListener("click", () => {
-      const rec = cfg.sampleRecords[currentRecordIndex];
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rec, null, 2));
-      const downloadAnchor = document.createElement("a");
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `${rec.id}-digitized-record.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-      showToast(`Exported ${rec.id} structured JSON!`);
-    });
-  }
-
-  const rescanBtn = document.getElementById("sim-rescan-btn");
-  if (rescanBtn) {
-    rescanBtn.addEventListener("click", () => {
-      renderRecord(cfg.sampleRecords[currentRecordIndex], true);
-      showToast("Re-running AI OCR and Layout analysis pipeline...");
-    });
-  }
-
-  // Initial render
-  renderRecord(cfg.sampleRecords[0], false);
-}
-
-function renderRecord(rec, animate) {
-  const viewerMockup = document.getElementById("doc-paper-mockup");
-  const fieldsTbody = document.getElementById("fields-table-tbody");
-  const hitlAlert = document.getElementById("hitl-alert-strip");
-  const statusBadge = document.getElementById("sim-status-text");
-
-  if (animate && viewerMockup) {
-    viewerMockup.classList.add("scanning-active");
-    if (statusBadge) statusBadge.textContent = "AI Scanning & Inferring...";
-    setTimeout(() => {
-      viewerMockup.classList.remove("scanning-active");
-      if (statusBadge) statusBadge.textContent = rec.status;
-    }, 600);
-  } else {
-    if (statusBadge) statusBadge.textContent = rec.status;
-  }
-
-  // Update Scanned Paper Mockup
-  setText("doc-code-display", `${rec.id} | ${rec.state} (${rec.script})`);
-  setText("doc-type-display", rec.docType);
-  setText("doc-text-display", rec.previewSnippet);
-  setText("doc-geo-display", `Location: Village ${rec.village}, Tehsil ${rec.tehsil}, District ${rec.district}`);
-
-  // Extracted Fields Table
-  if (fieldsTbody) {
-    fieldsTbody.innerHTML = rec.extractedFields.map(f => {
-      let confClass = "conf-high";
-      if (f.confidence < 80) confClass = "conf-low";
-      else if (f.confidence < 95) confClass = "conf-med";
-
-      return `
-        <tr>
-          <td class="field-label">${f.field}</td>
-          <td class="field-value editable-field" contenteditable="true" title="Click to edit">${f.value}</td>
-          <td>
-            <span class="confidence-badge ${confClass}">
-              ${f.confidence}%
-            </span>
-          </td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  // HITL Alert Strip
-  const lowConfField = rec.extractedFields.find(f => f.confidence < 80);
-  if (lowConfField && hitlAlert) {
-    hitlAlert.classList.add("visible");
-    hitlAlert.innerHTML = `
-      <h5>⚠️ Human-in-the-Loop Verification Required</h5>
-      <p>Field <strong>"${lowConfField.field}"</strong> has lower confidence (${lowConfField.confidence}%). ${lowConfField.flagReason || 'Please review and confirm before approving.'}</p>
-    `;
-  } else if (hitlAlert) {
-    hitlAlert.classList.remove("visible");
-  }
-
-  // Validation checks
-  setText("val-format", rec.validationChecks.formatCheck);
-  setText("val-area", rec.validationChecks.areaConsistency);
-  setText("val-duplicate", rec.validationChecks.duplicateCheck);
-  setText("val-dilrmp", rec.validationChecks.dilrmpSync);
-}
-
-/**
  * Hydrate State-wise Digitization Dashboard
  */
 function hydrateDashboard() {
@@ -313,7 +627,7 @@ function hydrateDashboard() {
 }
 
 /**
- * Architecture Steps Click
+ * Architecture Step Selection
  */
 function initArchitectureSteps() {
   const steps = document.querySelectorAll(".pipeline-step");
@@ -326,7 +640,7 @@ function initArchitectureSteps() {
 }
 
 /**
- * Utility Helpers
+ * Utilities
  */
 function setText(id, value) {
   const el = document.getElementById(id);
