@@ -3,28 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Niriksha | Intelligent Cadastral Land Digitization & Interactive GIS Map (SIH PS 26018)</title>
-  <meta name="description" content="Niriksha GIS: Real working Cadastral Land Map & AI Digitization System for Telugu States (Telangana & Andhra Pradesh). Search by Survey Number or Coordinates." />
+  <title>Niriksha GIS | National Cadastral Land Digitization & Validation Portal | Government of India</title>
+  <meta name="description" content="Niriksha GIS: Official Cadastral Land Digitization & Spatial Validation Portal for Telugu States (Telangana & Andhra Pradesh). Search by Survey Number, House Number, or GPS Coordinates." />
 
   <!-- Leaflet GIS Map Library -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>" />
 </head>
 <body>
 
   <!-- Ambient Glow Overlay -->
   <div class="bg-grid-overlay"></div>
 
+  <!-- National Tricolor Strip & Official Government Header -->
+  <div class="national-tricolor-strip"></div>
+  <div class="national-top-bar">
+    <div class="container">
+      <div class="gov-emblem-text">
+        <span>🇮🇳</span>
+        <span>भारत सरकार • Government of India</span>
+        <span style="opacity: 0.4;">|</span>
+        <span>Ministry of Rural Development • Department of Land Resources (DoLR)</span>
+      </div>
+      <div class="gov-accessibility-links">
+        <span style="color: var(--accent-cyan); font-weight: 600;">DILRMP • Bhu-Aadhaar National System</span>
+        <span style="opacity: 0.4;">|</span>
+        <span style="font-family: var(--font-mono); font-size: 0.72rem; color: #cbd5e1;">Toll-Free: 1800-180-1551</span>
+        <span style="opacity: 0.4;">|</span>
+        <span style="font-weight: 600; color: #f8fafc;">ENG | తె | हि</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Navigation Bar -->
   <header class="navbar">
     <div class="container">
       <a href="#" class="nav-brand">
-        <div class="brand-icon">🗺️</div>
-        <span>Niriksha GIS</span>
-        <span class="brand-badge">SIH PS 26018</span>
+        <div class="brand-icon">🏛️</div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>Niriksha GIS</span>
+            <span class="brand-badge">National Portal</span>
+          </div>
+          <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.2px;">
+            National Cadastral Land Digitization & Validation System
+          </div>
+        </div>
       </a>
 
       <ul class="nav-links">
@@ -34,9 +61,9 @@
         <li><a href="#validation-engine" class="nav-link">Rule Engine</a></li>
         <li><a href="#api-explorer" class="nav-link">Govt APIs</a></li>
         <li><a href="#rbac-audit" class="nav-link">RBAC & Audit</a></li>
-        <li><a href="#scope-section" class="nav-link">Scope & Problems</a></li>
-        <li><a href="#tech-table" class="nav-link">Tech Matrix</a></li>
-        <li><a href="#dashboard" class="nav-link">Telemetry</a></li>
+        <li><a href="#scope-section" class="nav-link">National Challenges</a></li>
+        <li><a href="#tech-table" class="nav-link">Enterprise Stack</a></li>
+        <li><a href="#dashboard" class="nav-link">DILRMP Telemetry</a></li>
       </ul>
 
       <div class="nav-actions">
@@ -46,9 +73,13 @@
           </span>
         </button>
 
-        <a href="https://github.com/sannivesham/sih" target="_blank" rel="noopener noreferrer" class="btn btn-secondary sih-gh-link" style="padding: 8px 16px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-          <span>GitHub</span>
+        <a href="#ai-ocr-studio" class="btn btn-secondary" style="padding: 7px 14px; font-size: 0.8rem; border-color: var(--accent-cyan); color: var(--accent-cyan);">
+          <span class="pulse-dot"></span>
+          <span>Bhu-Aadhaar Active</span>
+        </a>
+
+        <a href="#rbac-audit" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.82rem;">
+          <span>🏛️ Official Login</span>
         </a>
       </div>
     </div>
@@ -63,14 +94,14 @@
         <div style="text-align: center; margin-bottom: 24px;">
           <div class="hero-badge-wrap">
             <span class="pulse-dot"></span>
-            <span style="font-size: 0.85rem; font-weight: 700;">Smart India Hackathon • Problem Statement #26018</span>
+            <span style="font-size: 0.85rem; font-weight: 700;">Digital India Land Records Modernization Programme (DILRMP) • Bhu-Aadhaar</span>
           </div>
           <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 12px;">
-            Interactive Cadastral Land Map & <br />
-            <span class="hero-highlight">AI Digitization System</span>
+            National Cadastral Land Map & <br />
+            <span class="hero-highlight">AI Digitization Platform</span>
           </h1>
           <p class="hero-subtitle" style="font-size: 1.05rem; margin-bottom: 16px;">
-            Zoom into Telugu States (Telangana & Andhra Pradesh) to explore divided survey plots. Click any land parcel to view owner details or search directly by GPS Coordinates (Lat, Long).
+            Integrated Cadastral GIS & AI-Powered Land Records System across Telugu States (Telangana & Andhra Pradesh). Search by Survey Number, House Number (Abadi), or GPS Coordinates (Lat, Long).
           </p>
         </div>
 
@@ -737,22 +768,22 @@
       </div>
     </section>
 
-    <!-- Scope of Study & Problems Table Section -->
+    <!-- National Challenges & Solutions Section -->
     <section class="section" id="scope-section">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">SIH PS 26018 Scope</span>
-          <h2 class="section-title">Scope of Study: Traditional Problems vs AI Solution</h2>
-          <p class="section-desc">Overcoming degraded papers, multi-script Indic handwriting, and manual boundary errors.</p>
+          <span class="section-tag">National Land Administration</span>
+          <h2 class="section-title">National Land Administration: Challenges & AI Solutions</h2>
+          <p class="section-desc">Overcoming degraded cloth registers, multi-script Indic handwriting, and boundary inconsistencies across Indian states.</p>
         </div>
 
         <div class="table-responsive">
           <table class="custom-table">
             <thead>
               <tr>
-                <th style="width: 25%;">Problem Area</th>
-                <th style="width: 35%;">Legacy Issue in Traditional Records</th>
-                <th style="width: 40%;">Proposed AI-Powered Solution</th>
+                <th style="width: 25%;">Administrative Challenge</th>
+                <th style="width: 35%;">Traditional Bottleneck in Legacy Records</th>
+                <th style="width: 40%;">Implemented AI-Powered Modernization</th>
               </tr>
             </thead>
             <tbody id="scope-table-tbody">
@@ -763,13 +794,13 @@
       </div>
     </section>
 
-    <!-- Suggested Components-Wise Technology Table -->
+    <!-- Digital India Technology Framework Table -->
     <section class="section" id="tech-table">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">Technical Architecture</span>
-          <h2 class="section-title">Suggested Components-Wise Technology</h2>
-          <p class="section-desc">Modular AI, Indic OCR, GIS, and verification pipeline recommended for PS 26018.</p>
+          <span class="section-tag">Enterprise Architecture</span>
+          <h2 class="section-title">Digital India Technology Framework</h2>
+          <p class="section-desc">Modular AI, Indic OCR, Geospatial GIS, and validation pipeline deployed under National DILRMP standards.</p>
         </div>
 
         <div class="table-responsive">
@@ -778,7 +809,7 @@
               <tr>
                 <th style="width: 24%;">Component</th>
                 <th style="width: 36%;">Key Technologies & Frameworks</th>
-                <th style="width: 40%;">Operational Role & Target Outcome</th>
+                <th style="width: 40%;">Operational Role & National Standard</th>
               </tr>
             </thead>
             <tbody id="components-table-tbody">
@@ -794,8 +825,8 @@
       <div class="container">
         <div class="section-header">
           <span class="section-tag">Autonomous Workflow</span>
-          <h2 class="section-title">5-Stage Land Modernization Pipeline</h2>
-          <p class="section-desc">Connecting raw scanned registers to interactive cadastral vector maps.</p>
+          <h2 class="section-title">5-Stage National Land Modernization Pipeline</h2>
+          <p class="section-desc">Connecting raw scanned legacy registers to interactive cadastral vector maps and Bhu-Aadhaar registry.</p>
         </div>
 
         <div class="pipeline-flow" id="pipeline-container">
@@ -845,17 +876,40 @@
       </div>
     </section>
 
-    <!-- Team Section -->
-    <section class="section" id="team">
+    <!-- Institutional Governance Framework -->
+    <section class="section" id="governance">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">Team Sannivesham</span>
-          <h2 class="section-title">SIH PS 26018 Innovators</h2>
-          <p class="section-desc">Architecting AI and GIS solutions for India's digital land governance.</p>
+          <span class="section-tag">Institutional Architecture</span>
+          <h2 class="section-title">Inter-Agency Governance Framework</h2>
+          <p class="section-desc">Multi-tier coordination driving digital land governance across Central Ministries and State Revenue Departments.</p>
         </div>
 
-        <div class="team-grid" id="team-container">
-          <!-- Dynamically populated from config.js -->
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="brand-icon" style="margin: 0 auto 16px; width: 50px; height: 50px; font-size: 1.6rem; background: linear-gradient(135deg, #f97316, #ea580c);">🏛️</div>
+            <h4 class="team-name">Department of Land Resources (DoLR)</h4>
+            <div class="team-role">Ministry of Rural Development, GoI</div>
+            <p class="team-bio">National policy formulation, DILRMP funding, Bhu-Aadhaar (ULPIN) standard setting, and cross-state land governance coordination.</p>
+          </div>
+          <div class="team-card">
+            <div class="brand-icon" style="margin: 0 auto 16px; width: 50px; height: 50px; font-size: 1.6rem; background: linear-gradient(135deg, #0284c7, #06b6d4);">🛰️</div>
+            <h4 class="team-name">Survey of India & ISRO Bhuvan</h4>
+            <div class="team-role">National Geospatial Authorities</div>
+            <p class="team-bio">Continuously Operating Reference Stations (CORS) network, high-resolution satellite orthorectified imagery, and drone cadastral boundary surveying.</p>
+          </div>
+          <div class="team-card">
+            <div class="brand-icon" style="margin: 0 auto 16px; width: 50px; height: 50px; font-size: 1.6rem; background: linear-gradient(135deg, #10b981, #059669);">💻</div>
+            <h4 class="team-name">National Informatics Centre (NIC)</h4>
+            <div class="team-role">MeitY Cloud & Digital Infrastructure</div>
+            <p class="team-bio">National cloud hosting, MeghRaj infrastructure, Bhoomi / Dharani state system API bridges, and blockchain tamper-proof audit trails.</p>
+          </div>
+          <div class="team-card">
+            <div class="brand-icon" style="margin: 0 auto 16px; width: 50px; height: 50px; font-size: 1.6rem; background: linear-gradient(135deg, #8b5cf6, #6366f1);">⚖️</div>
+            <h4 class="team-name">State Revenue & Registration Depts</h4>
+            <div class="team-role">Telangana, AP & Participating States</div>
+            <p class="team-bio">Ground revenue administration, tahsil-level record verification, mutation approvals, and sub-registrar deed encumbrance registration.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -943,27 +997,33 @@
     </div>
   </div>
 
-  <!-- Footer -->
+  <!-- Official Government Footer -->
   <footer class="footer">
     <div class="container">
       <div class="footer-top">
         <div class="footer-brand">
-          <h4>Team Sannivesham • SIH PS 26018</h4>
-          <p>Intelligent Land Record Digitization & Validation GIS System</p>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span style="font-size: 1.4rem;">🏛️</span>
+            <h4 style="margin: 0; font-size: 1.15rem; color: var(--text-main);">Niriksha GIS — National Cadastral Portal</h4>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.88rem; max-width: 600px;">
+            Department of Land Resources (DoLR), Ministry of Rural Development, Government of India.<br />
+            An intelligent land administration initiative under the Digital India Land Records Modernization Programme (DILRMP).
+          </p>
         </div>
-        <div style="display: flex; gap: 12px; align-items: center;">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
           <a href="#live-map" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;">
-            ↑ Back to Live Map
+            ↑ Back to Cadastral Map
           </a>
-          <a href="https://github.com/sannivesham/sih" target="_blank" rel="noopener noreferrer" class="btn btn-primary sih-gh-link" style="padding: 8px 16px; font-size: 0.85rem;">
-            View on GitHub ⭐
+          <a href="map.html" target="_blank" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.85rem;">
+            ⛶ Open Fullscreen GIS Viewer
           </a>
         </div>
       </div>
 
       <div class="footer-bottom">
-        <p>© 2024–2026 Team Sannivesham. Built for Smart India Hackathon.</p>
-        <p>Repository: <a href="https://github.com/sannivesham/sih" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); text-decoration: none;">github.com/sannivesham/sih</a></p>
+        <p>© 2026 Government of India. Designed, developed and hosted by National Cadastral Informatics Directorate. All rights reserved.</p>
+        <p>National Portal of India | DILRMP Guidelines | Bhu-Aadhaar Standards v2.1</p>
       </div>
     </div>
   </footer>

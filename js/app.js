@@ -643,24 +643,16 @@ function initDeedModal() {
 }
 
 /**
- * Hydrate Problem Metadata from SIH_CONFIG
+ * Hydrate Portal Metadata from SIH_CONFIG
  */
 function hydrateProblemMetadata() {
   if (!window.SIH_CONFIG) return;
   const cfg = window.SIH_CONFIG;
 
-  setText("hero-edition", cfg.event.name);
+  setText("hero-edition", "National Land Governance Portal");
   setText("hero-tagline", cfg.problemStatement.tagline);
-  setText("problem-badge-id", `PS ID: ${cfg.problemStatement.id}`);
-  setText("problem-badge-theme", cfg.problemStatement.domain);
-  setText("problem-badge-org", cfg.problemStatement.ministry);
-  setText("problem-badge-cat", cfg.problemStatement.category);
-
   setText("problem-title-display", cfg.problemStatement.title);
   setText("problem-desc-lead", cfg.problemStatement.background);
-
-  const ghLinks = document.querySelectorAll(".sih-gh-link");
-  ghLinks.forEach(el => el.setAttribute("href", cfg.event.githubRepo));
 
   // Objectives
   const objContainer = document.getElementById("objectives-container");
