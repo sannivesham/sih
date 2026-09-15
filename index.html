@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bhu-Lipi AI | Intelligent Cadastral Land Digitization & Interactive GIS Map (SIH PS 26018)</title>
-  <meta name="description" content="Real working Cadastral Land Map & AI Digitization System for Telugu States (Telangana & Andhra Pradesh). Search by Survey Number or Coordinates." />
+  <title>Niriksha | Intelligent Cadastral Land Digitization & Interactive GIS Map (SIH PS 26018)</title>
+  <meta name="description" content="Niriksha GIS: Real working Cadastral Land Map & AI Digitization System for Telugu States (Telangana & Andhra Pradesh). Search by Survey Number or Coordinates." />
 
   <!-- Leaflet GIS Map Library -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -23,12 +23,13 @@
     <div class="container">
       <a href="#" class="nav-brand">
         <div class="brand-icon">🗺️</div>
-        <span>Bhu-Lipi GIS</span>
+        <span>Niriksha GIS</span>
         <span class="brand-badge">SIH PS 26018</span>
       </a>
 
       <ul class="nav-links">
         <li><a href="#live-map" class="nav-link active">Cadastral Map</a></li>
+        <li><a href="map.html" target="_blank" class="nav-link" style="color: var(--accent-cyan); font-weight: 700;">⛶ Fullscreen App</a></li>
         <li><a href="#scope-section" class="nav-link">Scope & Problems</a></li>
         <li><a href="#tech-table" class="nav-link">Technology Matrix</a></li>
         <li><a href="#architecture" class="nav-link">Architecture</a></li>
@@ -79,7 +80,7 @@
             <div class="map-header-left">
               <h2>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-                <span>Bhu-Naksha Cadastral Viewer</span>
+                <span>Niriksha Cadastral Viewer</span>
               </h2>
               <span class="live-indicator-pill">
                 <span class="pulse-dot"></span>
@@ -97,10 +98,15 @@
               </button>
             </div>
 
-            <!-- Layer Switcher -->
+            <!-- Layer Switcher & Fullscreen Controls -->
             <div class="map-view-toggle">
               <button id="layer-sat-btn" class="layer-btn active">🛰️ Satellite</button>
-              <button id="layer-street-btn" class="layer-btn">🗺️ Street Map</button>
+              <button id="layer-street-btn" class="layer-btn">🗺️ Streets</button>
+              <button id="fullscreen-toggle-btn" class="layer-btn" title="Toggle Fullscreen Map Mode" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                <span>Fullscreen</span>
+              </button>
+              <a href="map.html" target="_blank" class="layer-btn" title="Open in Dedicated Standalone Window" style="text-decoration: none;">↗ Standalone App</a>
             </div>
           </div>
 
@@ -117,7 +123,7 @@
                     type="text" 
                     id="hud-search-input" 
                     class="hud-search-input" 
-                    placeholder="Search by Survey No (e.g. 184/A), Khata, Owner, or Lat, Long (e.g. 17.7382, 78.2828)..." 
+                    placeholder="Search by Survey No, House No (H.No. 4-82), Owner, or Lat, Long (17.7382, 78.2828)..." 
                   />
                   <button id="hud-search-btn" class="hud-search-btn">
                     <span>Search Land</span>
@@ -127,12 +133,13 @@
                 <!-- Quick Coordinate & Survey Pills for Demo -->
                 <div class="hud-quick-pills">
                   <span class="quick-pill-label">⚡ Quick Demo Targets:</span>
-                  <span class="coord-chip" data-query="184/A">📍 Survey 184/A (Venkateshwarlu)</span>
-                  <span class="coord-chip" data-query="184/B">📍 Survey 184/B (Lakshmi Devi)</span>
-                  <span class="coord-chip" data-query="185/2">⚠️ Survey 185/2 (Dispute Audit)</span>
+                  <span class="coord-chip" data-query="184/A">🌾 Survey 184/A (Venkateshwarlu Farm)</span>
+                  <span class="coord-chip" data-query="H.No. 4-82">🏠 H.No. 4-82 (Narayana House)</span>
+                  <span class="coord-chip" data-query="H.No. 4-95">🏠 H.No. 4-95 (Anasuya Villa)</span>
+                  <span class="coord-chip" data-query="189/1">⛽ Survey 189/1 (Commercial Fuel Hub)</span>
+                  <span class="coord-chip" data-query="185/2">⚠️ Survey 185/2 (Disputed Farm)</span>
                   <span class="coord-chip" data-query="17.7382, 78.2828">🌐 GPS: 17.7382, 78.2828</span>
-                  <span class="coord-chip" data-query="92/1">📍 Survey 92/1 (Mangalagiri AP)</span>
-                  <span class="coord-chip" data-query="16.4348, 80.5645">🌐 GPS: 16.4348, 80.5645</span>
+                  <span class="coord-chip" data-query="Plot 14">🏠 Plot 14 (Amaravati Villa AP)</span>
                 </div>
               </div>
             </div>
@@ -142,7 +149,7 @@
               <div class="legend-header">
                 <div class="legend-title-row">
                   <span class="legend-title">Cadastral Filter</span>
-                  <span class="legend-badge-count" id="active-parcel-count">8 Plots</span>
+                  <span class="legend-badge-count" id="active-parcel-count">Plots</span>
                 </div>
                 <div class="legend-btn-group">
                   <button type="button" class="legend-filter-btn" id="filter-all-btn" title="Select All Categories">All</button>
@@ -155,10 +162,20 @@
                   <input type="checkbox" class="cat-checkbox" value="clear" checked />
                   <span class="legend-color color-clear"></span>
                   <span class="legend-text">
-                    <strong class="cat-name-en">Clear Agricultural</strong>
-                    <span class="cat-name-te">పట్టాదారు వ్యవసాయం</span>
+                    <strong class="cat-name-en">Agricultural Fields</strong>
+                    <span class="cat-name-te">వ్యవసాయ పొలాలు</span>
                   </span>
                   <span class="cat-count" id="count-clear">4</span>
+                </label>
+
+                <label class="legend-filter-item" data-code="residential">
+                  <input type="checkbox" class="cat-checkbox" value="residential" checked />
+                  <span class="legend-color color-residential"></span>
+                  <span class="legend-text">
+                    <strong class="cat-name-en">Houses & Residential</strong>
+                    <span class="cat-name-te">నివాస స్థలాలు / ఇళ్ళు (Abadi)</span>
+                  </span>
+                  <span class="cat-count" id="count-residential">3</span>
                 </label>
 
                 <label class="legend-filter-item" data-code="commercial">
@@ -188,7 +205,7 @@
                     <strong class="cat-name-en">Govt / Grama Kantham</strong>
                     <span class="cat-name-te">ప్రభుత్వ స్థలం (22-A)</span>
                   </span>
-                  <span class="cat-count" id="count-govt">2</span>
+                  <span class="cat-count" id="count-govt">1</span>
                 </label>
 
                 <label class="legend-filter-item" data-code="water">

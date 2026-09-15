@@ -1,7 +1,7 @@
-﻿<div align="center">
+<div align="center">
 
-# 🇮🇳 Bhu-Lipi AI
-### Intelligent Land Record Digitization and Validation System
+# 🇮🇳 Niriksha GIS
+### Intelligent Land Record Digitization & Cadastral GIS Platform
 **Smart India Hackathon (SIH) — Problem Statement ID: 26018**
 *Developed by Team Sannivesham*
 
@@ -9,13 +9,14 @@
 [![Category: Software Edition](https://img.shields.io/badge/Category-Software%20Edition-blue?style=for-the-badge)](https://sih.gov.in)
 [![Ministry](https://img.shields.io/badge/Ministry-Dept%20of%20Land%20Resources%20%2F%20DILRMP-138808?style=for-the-badge)](https://dolr.gov.in)
 [![Live Portal](https://img.shields.io/badge/Portal-Live%20Prototype-06b6d4?style=for-the-badge)](https://sannivesham.github.io/sih/)
+[![Standalone Map](https://img.shields.io/badge/Fullscreen%20App-map.html-10b981?style=for-the-badge)](https://sannivesham.github.io/sih/map.html)
 [![GitHub Organization](https://img.shields.io/badge/Organization-Sannivesham-8b5cf6?style=for-the-badge)](https://github.com/sannivesham)
 
 <p align="center">
-  <b>An AI-powered Intelligent Land Record Digitization and Validation System capable of automatically extracting structured information from scanned land records, handwritten documents, cadastral maps, and legacy PDF files across diverse Indian languages.</b>
+  <b>Niriksha: An AI-powered Intelligent Land Record Digitization and Validation System capable of automatically extracting structured information from scanned land records, handwritten documents, cadastral maps, and legacy PDF files across diverse Indian languages.</b>
 </p>
 
-[Explore Live Prototype](https://sannivesham.github.io/sih/) • [Problem Background](#-problem-background) • [Scope of Study](#-scope-of-study--problems-table) • [Suggested Technologies](#-suggested-components-wise-technology) • [System Architecture](#-5-stage-pipeline-architecture) • [Team](#-team-sannivesham)
+[Explore Live Portal](https://sannivesham.github.io/sih/) • [Open Fullscreen Map App](https://sannivesham.github.io/sih/map.html) • [Problem Background](#-problem-background) • [Scope of Study](#-scope-of-study--problems-table) • [Suggested Technologies](#-suggested-components-wise-technology) • [System Architecture](#-5-stage-pipeline-architecture) • [Team](#-team-sannivesham)
 
 ---
 

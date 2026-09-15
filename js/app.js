@@ -12,12 +12,13 @@ let streetLayer = null;
 let parcelsLayerGroup = null;
 let activeMarkerPin = null;
 let selectedParcelFeature = null;
-let activeCategories = new Set(["clear", "commercial", "dispute", "govt", "water"]);
+let activeCategories = new Set(["clear", "residential", "commercial", "dispute", "govt", "water"]);
 
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   initCadastralMap();
   initCategoryFilters();
+  initFullscreenMode();
   initSearchAndPills();
   initRegionSwitcher();
   initDeedModal();
@@ -164,7 +165,10 @@ function renderCadastralPolygons() {
       let strokeColor = "#10b981"; // Emerald green for clear
       let fillColor = "#10b981";
 
-      if (status === "commercial") {
+      if (status === "residential") {
+        strokeColor = "#f43f5e"; // Rose / Pink for Houses & Residential
+        fillColor = "#f43f5e";
+      } else if (status === "commercial") {
         strokeColor = "#06b6d4"; // Cyan
         fillColor = "#06b6d4";
       } else if (status === "dispute") {
@@ -290,7 +294,7 @@ function initCategoryFilters() {
  * Update parcel counts in the filter legend
  */
 function updateCategoryCounts(allFeatures, filteredFeatures) {
-  const counts = { clear: 0, commercial: 0, dispute: 0, govt: 0, water: 0 };
+  const counts = { clear: 0, residential: 0, commercial: 0, dispute: 0, govt: 0, water: 0 };
 
   allFeatures.forEach(f => {
     const sc = f.properties.statusCode;
@@ -304,6 +308,39 @@ function updateCategoryCounts(allFeatures, filteredFeatures) {
   });
 
   setText("active-parcel-count", `${filteredFeatures.length} of ${allFeatures.length} Plots`);
+}
+
+/**
+ * Fullscreen Mode Controller
+ */
+function initFullscreenMode() {
+  const btn = document.getElementById("fullscreen-toggle-btn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const isFull = document.body.classList.toggle("fullscreen-mode");
+    if (isFull) {
+      btn.innerHTML = `<span>✕ Exit Fullscreen</span>`;
+      showToast("Expanded Niriksha GIS to Edge-to-Edge Full Screen");
+    } else {
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg><span>Fullscreen</span>`;
+      showToast("Exited Full Screen");
+    }
+    setTimeout(() => {
+      if (map) map.invalidateSize();
+    }, 150);
+  });
+
+  // Listen to Escape key to exit fullscreen
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("fullscreen-mode")) {
+      document.body.classList.remove("fullscreen-mode");
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg><span>Fullscreen</span>`;
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 150);
+    }
+  });
 }
 
 /**

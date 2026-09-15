@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Smart India Hackathon (SIH) Configuration & Metadata
  * Problem Statement ID: 26018
  * Title: Intelligent Land Record Digitization and Validation System
@@ -21,8 +21,8 @@ const SIH_CONFIG = {
   // Problem Statement Particulars
   problemStatement: {
     id: "26018",
-    title: "Intelligent Land Record Digitization and Validation System",
-    tagline: "AI-Powered Multilingual OCR, Handwritten Deed Extraction, Human-in-the-Loop Validation & DILRMP/GIS Integration",
+    title: "Niriksha — Intelligent Land Record Digitization & Cadastral GIS Platform",
+    tagline: "AI-Powered Multilingual OCR, Handwritten Deed Extraction, Human-in-the-Loop Validation & Cadastral GIS Integration",
     ministry: "Ministry of Rural Development / Department of Land Resources, Govt. of India",
     domain: "Land Administration / GovTech / Smart Automation / AI",
     category: "Software",
