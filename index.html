@@ -30,11 +30,13 @@
       <ul class="nav-links">
         <li><a href="#live-map" class="nav-link active">Cadastral Map</a></li>
         <li><a href="map.html" target="_blank" class="nav-link" style="color: var(--accent-cyan); font-weight: 700;">⛶ Fullscreen App</a></li>
+        <li><a href="#ai-ocr-studio" class="nav-link">AI Indic OCR</a></li>
+        <li><a href="#validation-engine" class="nav-link">Rule Engine</a></li>
+        <li><a href="#api-explorer" class="nav-link">Govt APIs</a></li>
+        <li><a href="#rbac-audit" class="nav-link">RBAC & Audit</a></li>
         <li><a href="#scope-section" class="nav-link">Scope & Problems</a></li>
-        <li><a href="#tech-table" class="nav-link">Technology Matrix</a></li>
-        <li><a href="#architecture" class="nav-link">Architecture</a></li>
+        <li><a href="#tech-table" class="nav-link">Tech Matrix</a></li>
         <li><a href="#dashboard" class="nav-link">Telemetry</a></li>
-        <li><a href="#team" class="nav-link">Team</a></li>
       </ul>
 
       <div class="nav-actions">
@@ -308,6 +310,428 @@
                 </div>
               </div>
             </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. AI Indic OCR & Human-in-the-Loop (HITL) Studio -->
+    <section class="section" id="ai-ocr-studio">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Indic Vision & NLP Engine</span>
+          <h2 class="section-title">Multi-lingual Indic OCR & Automated Extraction Studio</h2>
+          <p class="section-desc">
+            Autonomous extraction of 12 predefined land administration fields with confidence scoring, low-confidence HITL alert (<80%), and continuous active learning retraining.
+          </p>
+        </div>
+
+        <div class="ocr-studio-card">
+          <!-- Document Selector & Controls -->
+          <div class="ocr-sample-selector">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">SELECT SOURCE DEED:</span>
+            <button class="ocr-sample-btn active" data-sample="telugu-medak">
+              📜 Sample 1: Telugu RoR 1-B (రైతు పట్టా - మెదక్)
+            </button>
+            <button class="ocr-sample-btn" data-sample="hindi-khasra">
+              📄 Sample 2: Hindi Khasra (मध्य प्रदेश खसरा खतौनी)
+            </button>
+            <button class="ocr-sample-btn" data-sample="ap-adangal">
+              📑 Sample 3: AP Adangal (ఆంధ్రప్రదేశ్ అడంగల్ - గుంటూరు)
+            </button>
+            <div style="margin-left: auto; display: flex; gap: 10px;">
+              <button id="run-ocr-pipeline-btn" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Run Indic OCR & Extraction</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Studio Grid: Scanned Scan with Bounding Boxes (Left) vs Extracted 12 Fields Table (Right) -->
+          <div class="ocr-studio-grid">
+            <!-- Left: Document Preview Canvas -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="font-size: 0.95rem; color: var(--text-main); font-weight: 700;">
+                  Scanned Document & CRAFT Bounding Boxes
+                </h4>
+                <span class="conf-pill high" id="ocr-overall-conf">Pipeline Conf: 98.2%</span>
+              </div>
+
+              <div class="ocr-scan-preview" id="ocr-scan-preview-box">
+                <div style="text-align: center; border-bottom: 2px solid #8b5a2b; padding-bottom: 8px; margin-bottom: 16px;">
+                  <h4 style="color: #6b3e11; margin: 0; font-size: 1.05rem;" id="ocr-doc-header-title">భారత ప్రభుత్వం • రెవెన్యూ శాఖ</h4>
+                  <span style="font-size: 0.78rem; color: #8b5a2b;" id="ocr-doc-header-sub">హక్కుల రికార్డు & పట్టాదారు పాస్ పుస్తకం (RoR 1-B)</span>
+                </div>
+
+                <div class="ocr-scan-line">
+                  <strong>పట్టాదారు పేరు:</strong> 
+                  <mark id="scan-mark-owner">వెంకటేశ్వర్లు రావు</mark> 
+                  <span style="font-size: 0.72rem; color: #0891b2;">[OWNER]</span>
+                </div>
+
+                <div class="ocr-scan-line">
+                  <strong>తండ్రి పేరు:</strong> 
+                  <mark id="scan-mark-guardian">లక్ష్మయ్య</mark> 
+                  <span style="font-size: 0.72rem; color: #0891b2;">[RELATION]</span>
+                </div>
+
+                <div class="ocr-scan-line">
+                  <strong>సర్వే / ఖస్రా నెం:</strong> 
+                  <mark id="scan-mark-survey">184/A</mark> 
+                  <span style="font-size: 0.72rem; color: #0891b2;">[SURVEY_NO]</span>
+                </div>
+
+                <div class="ocr-scan-line">
+                  <strong>విస్తీర్ణము:</strong> 
+                  <mark id="scan-mark-area">2 ఎకరాలు 14 గుంటలు</mark> 
+                  <span style="font-size: 0.72rem; color: #0891b2;">[EXTENT]</span>
+                </div>
+
+                <div class="ocr-scan-line">
+                  <strong>ఖాతా నెంబరు:</strong> 
+                  <mark id="scan-mark-khata">842</mark> 
+                  <span style="font-size: 0.72rem; color: #0891b2;">[KHATA]</span>
+                </div>
+
+                <div class="ocr-scan-line">
+                  <strong>గ్రామం & మండలం:</strong> 
+                  <mark id="scan-mark-village">రుస్తుంపేట్, నర్సాపూర్, మెదక్</mark> 
+                  <span style="font-size: 0.72rem; color: #0891b2;">[LOCATION]</span>
+                </div>
+
+                <div class="ocr-scan-line">
+                  <strong>మ్యుటేషన్ & లీగల్ స్టేటస్:</strong> 
+                  <mark class="warning-mark" id="scan-mark-mutation">నిరభ్యంతర క్రయవిక్రయం (Alienation Clear)</mark> 
+                  <span style="font-size: 0.72rem; color: #b91c1c;">[MUTATION - ⚠️ 74.2%]</span>
+                </div>
+
+                <div style="margin-top: 18px; padding-top: 8px; border-top: 1px dashed #8b5a2b; font-size: 0.75rem; color: #8b5a2b; display: flex; justify-content: space-between;">
+                  <span>డిజిటల్ సీల్: ఆమోదించబడింది</span>
+                  <span>కేంద్ర Bhu-Aadhaar లింక్డ్</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Predefined 12 Fields Classification Table -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="font-size: 0.95rem; color: var(--text-main); font-weight: 700;">
+                  Predefined 12 Administrative Fields (LayoutLMv3)
+                </h4>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Threshold: ≥80% Auto-pass</span>
+              </div>
+
+              <div class="table-responsive" style="margin-top: 0; max-height: 380px; overflow-y: auto;">
+                <table class="ocr-extracted-table">
+                  <thead>
+                    <tr>
+                      <th>Predefined Field</th>
+                      <th>Extracted Value</th>
+                      <th>Confidence</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ocr-fields-tbody">
+                    <!-- Hydrated via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Human-in-the-Loop (HITL) Alert Banner & Feedback Loop -->
+          <div class="hitl-alert-banner" id="hitl-alert-box">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+              <div style="font-size: 1.5rem;">⚠️</div>
+              <div>
+                <strong style="color: #f87171; font-size: 0.95rem;">
+                  Human-in-the-Loop (HITL) Flag: Confidence Below 80% Threshold
+                </strong>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                  Field <strong>#10 [Mutation / Encumbrance Status]</strong> yielded <strong>74.2%</strong> confidence due to cursive Telugu ink fading. Officer verification required prior to finalizing Digital RoR.
+                </p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;" id="hitl-controls-wrap">
+              <input 
+                type="text" 
+                id="hitl-correction-input" 
+                value="Clean Title - Unencumbered (నిరభ్యంతర క్రయవిక్రయ అర్హత)" 
+                style="padding: 7px 12px; font-size: 0.82rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); color: var(--text-main); width: 280px;"
+              />
+              <button id="hitl-approve-btn" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.82rem;">
+                <span>✓ Vetting Complete & Train Model</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Automated Cross-Verification & Spatial Rule Engine -->
+    <section class="section" id="validation-engine">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Rule-Based Integrity Engine</span>
+          <h2 class="section-title">Automated Spatial & Administrative Validation Engine</h2>
+          <p class="section-desc">
+            Validating sub-plot area consistency, detecting cadastral boundary overlaps, and reconciling spatial records against Dharani & Meebhoomi registries.
+          </p>
+        </div>
+
+        <div class="rule-engine-grid">
+          <!-- Rule 1: Sub-Plot Area Sum vs Parent Khasra Area -->
+          <div class="rule-card">
+            <div class="rule-card-header">
+              <div class="rule-card-title">
+                <span>📐 Sub-Plot Area Sum Check</span>
+              </div>
+              <span class="rule-status-badge pass" id="sub-plot-badge">PASSED</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+              Verifies mathematical equality: Sum of all digitized sub-divisions must exactly match the parent Survey parcel area recorded in RoR Form 1-B.
+            </p>
+
+            <div class="rule-math-box" id="sub-plot-math-box">
+              <div class="math-item">
+                <span>Master Survey #184 Area:</span>
+                <strong>4.0000 Acres</strong>
+              </div>
+              <div class="math-item">
+                <span>Sub-plot 184/A (Venkateshwarlu):</span>
+                <span>2.3500 Acres</span>
+              </div>
+              <div class="math-item">
+                <span>Sub-plot 184/B (Narsimha Rao):</span>
+                <span id="sub-plot-b-val">1.6500 Acres</span>
+              </div>
+              <div class="math-item">
+                <span>Area Delta (Difference):</span>
+                <span id="sub-plot-delta" style="color: var(--accent-green);">0.0000 Acres (0.00%)</span>
+              </div>
+            </div>
+
+            <div style="margin-top: auto; display: flex; gap: 8px;">
+              <button id="toggle-anomaly-btn" class="btn btn-secondary" style="width: 100%; font-size: 0.8rem; padding: 8px;">
+                ⚡ Simulate Fraud / Encroachment (+0.45 Ac)
+              </button>
+            </div>
+          </div>
+
+          <!-- Rule 2: Cadastral Boundary Overlap & Duplicate Check -->
+          <div class="rule-card">
+            <div class="rule-card-header">
+              <div class="rule-card-title">
+                <span>🛡️ Cadastral Overlap & Duplicate Check</span>
+              </div>
+              <span class="rule-status-badge pass">ZERO COLLISION</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+              Computes geometric spatial intersection of parcel polygon against adjacent cadastral GIS layers to prevent double-registration and land grabbing.
+            </p>
+
+            <div class="rule-math-box">
+              <div class="math-item">
+                <span>Spatial Intersection Check:</span>
+                <span style="color: var(--accent-green);">0.00 sq.m (No Overlap)</span>
+              </div>
+              <div class="math-item">
+                <span>Duplicate Khasra Check:</span>
+                <span style="color: var(--accent-green);">Unique (0 Duplicates)</span>
+              </div>
+              <div class="math-item">
+                <span>Buffer Boundary Clearance:</span>
+                <span>≥ 1.5m Road Setback OK</span>
+              </div>
+              <div class="math-item">
+                <span>Geometric Topology:</span>
+                <span style="color: var(--accent-cyan);">Valid Closed Polygon</span>
+              </div>
+            </div>
+
+            <div style="margin-top: auto;">
+              <div style="font-size: 0.78rem; color: var(--accent-green); background: rgba(16,185,129,0.1); padding: 8px; border-radius: var(--radius-sm); border: 1px solid rgba(16,185,129,0.25);">
+                ✓ Geo-referenced with Survey of India benchmark coordinates.
+              </div>
+            </div>
+          </div>
+
+          <!-- Rule 3: Cross-System State LRMS & ULPIN Sync -->
+          <div class="rule-card">
+            <div class="rule-card-header">
+              <div class="rule-card-title">
+                <span>🏛️ State LRMS & Bhu-Aadhaar Reconcile</span>
+              </div>
+              <span class="rule-status-badge pass">SYNCED</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 14px;">
+              Cross-validates extracted land deeds against live Dharani (Telangana) and Meebhoomi (Andhra Pradesh) state registry databases.
+            </p>
+
+            <div class="rule-math-box">
+              <div class="math-item">
+                <span>State Portal Match:</span>
+                <span style="color: var(--accent-green);">Dharani Portal Verified</span>
+              </div>
+              <div class="math-item">
+                <span>Prohibited List (Sec 22-A):</span>
+                <span style="color: var(--accent-green);">Clean (Not Govt/Waqf)</span>
+              </div>
+              <div class="math-item">
+                <span>Court Stay / Injunction:</span>
+                <span style="color: var(--accent-green);">None Recorded</span>
+              </div>
+              <div class="math-item">
+                <span>National ULPIN Status:</span>
+                <span style="color: var(--accent-cyan); font-weight: 700;">14-Digit Bhu-Aadhaar Active</span>
+              </div>
+            </div>
+
+            <div style="margin-top: auto;">
+              <div style="font-size: 0.78rem; color: var(--text-secondary); background: var(--bg-surface-elevated); padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+                Last synced with National DILRMP server at 00:04 IST.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Government REST API & ULPIN Gateway -->
+    <section class="section" id="api-explorer">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Interoperability & Open Architecture</span>
+          <h2 class="section-title">Government Integration REST APIs</h2>
+          <p class="section-desc">
+            Standardized OpenAPI 3.0 endpoints allowing state LRMS, banks, judiciary, and PM GatiShakti portals to query cadastral data and run validation routines.
+          </p>
+        </div>
+
+        <div class="api-explorer-card">
+          <!-- API Endpoints Navigation Tabs -->
+          <div class="api-tabs">
+            <button class="api-tab-btn active" data-api="ulpin">
+              <span class="api-method-badge get">GET</span>
+              <span>/api/v1/land/ulpin/{ulpin_id}</span>
+            </button>
+            <button class="api-tab-btn" data-api="ocr">
+              <span class="api-method-badge post">POST</span>
+              <span>/api/v1/ocr/digitize-deed</span>
+            </button>
+            <button class="api-tab-btn" data-api="validate">
+              <span class="api-method-badge post">POST</span>
+              <span>/api/v1/validate/sub-plots</span>
+            </button>
+            <button class="api-tab-btn" data-api="audit">
+              <span class="api-method-badge get">GET</span>
+              <span>/api/v1/audit/mutation-trail/{parcel_id}</span>
+            </button>
+          </div>
+
+          <!-- Active Endpoint Details -->
+          <div class="api-endpoint-bar">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="api-method-badge get" id="api-badge-method">GET</span>
+              <span id="api-endpoint-url" style="color: var(--text-main); font-weight: 700;">
+                https://api.niriksha.gov.in/api/v1/land/ulpin/TS-MED-NAR-184-A01
+              </span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="api-execute-btn" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.8rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Send Request</span>
+              </button>
+              <button id="api-copy-curl-btn" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
+                <span>Copy cURL</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Response Viewer -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">
+                HTTP Status: <strong style="color: var(--accent-green);">200 OK</strong> | Content-Type: application/json
+              </span>
+              <span style="font-size: 0.78rem; color: var(--accent-cyan);" id="api-latency-pill">Latency: 28 ms</span>
+            </div>
+            <div class="api-response-viewer">
+              <pre id="api-response-code" style="margin: 0; font-family: var(--font-mono);"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Role-Based Access Control (RBAC) & Tamper-Proof Audit Trail -->
+    <section class="section" id="rbac-audit">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Governance & Security</span>
+          <h2 class="section-title">Role-Based Access Control (RBAC) & Immutable Audit Trail</h2>
+          <p class="section-desc">
+            Granular administrative permission matrix and cryptographically signed SHA-256 audit logs ensuring zero unauthorized alterations to land titles.
+          </p>
+        </div>
+
+        <div class="rbac-container-card">
+          <!-- Role Switcher -->
+          <div style="margin-bottom: 16px;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">ACTIVE USER SIMULATION ROLE:</span>
+          </div>
+          <div class="role-pill-group">
+            <button class="role-pill-btn active" data-role="citizen">
+              👤 Citizen (Public Citizen Viewer)
+            </button>
+            <button class="role-pill-btn" data-role="patwari">
+              🧑‍💼 Patwari / Village Revenue Officer (VRO)
+            </button>
+            <button class="role-pill-btn" data-role="tahsildar">
+              🏛️ Tahsildar / Joint Sub-Registrar
+            </button>
+            <button class="role-pill-btn" data-role="admin">
+              🛡️ State LRMS System Administrator
+            </button>
+          </div>
+
+          <!-- Dynamic Role Permissions Matrix -->
+          <div style="margin-bottom: 12px;">
+            <h4 style="font-size: 0.95rem; color: var(--text-main); font-weight: 700;">
+              Permissions Granted to <span id="rbac-role-name" style="color: var(--accent-cyan);">Citizen (Public Citizen Viewer)</span>
+            </h4>
+          </div>
+          <div class="rbac-perm-grid" id="rbac-perm-grid">
+            <!-- Populated via JavaScript -->
+          </div>
+
+          <!-- Tamper-Proof Audit Trail Table -->
+          <div style="margin-top: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="font-size: 0.95rem; color: var(--text-main); font-weight: 700;">
+                🔒 Cryptographic Immutable Audit Trail Log (SHA-256)
+              </h4>
+              <span style="font-size: 0.78rem; color: var(--accent-green);">● Blockchain-anchored Integrity</span>
+            </div>
+
+            <div class="table-responsive" style="margin-top: 0;">
+              <table class="audit-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp (IST)</th>
+                    <th>Actor ID & Role</th>
+                    <th>Action Executed</th>
+                    <th>Affected Parcel / ULPIN</th>
+                    <th>Verification SHA-256 Hash</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-trail-tbody">
+                  <!-- Populated via JavaScript -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

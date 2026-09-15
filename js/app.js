@@ -26,6 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
   hydrateTables();
   hydrateDashboard();
   initArchitectureSteps();
+  initAiOcrStudio();
+  initValidationEngine();
+  initApiExplorer();
+  initRbacAndAudit();
 });
 
 /**
@@ -804,3 +808,596 @@ function showToast(message) {
     setTimeout(() => toast.remove(), 300);
   }, 3200);
 }
+
+/**
+ * ============================================================================
+ * 1. AI Indic OCR & Human-in-the-Loop (HITL) Studio
+ * ============================================================================
+ */
+const OCR_SAMPLES = {
+  "telugu-medak": {
+    header: "భారత ప్రభుత్వం • రెవెన్యూ శాఖ",
+    sub: "హక్కుల రికార్డు & పట్టాదారు పాస్ పుస్తకం (RoR 1-B)",
+    overallConf: "98.2%",
+    marks: {
+      owner: "వెంకటేశ్వర్లు రావు",
+      guardian: "లక్ష్మయ్య",
+      survey: "184/A",
+      area: "2 ఎకరాలు 14 గుంటలు",
+      khata: "842",
+      village: "రుస్తుంపేట్, నర్సాపూర్, మెదక్",
+      mutation: "నిరభ్యంతర క్రయవిక్రయం (Alienation Clear)"
+    },
+    fields: [
+      { name: "1. Landowner Details", val: "Venkateshwarlu Rao (వెంకటేశ్వర్లు రావు)", conf: "98.6%", status: "high" },
+      { name: "2. Father / Guardian", val: "Laxmaiah (లక్ష్మయ్య)", conf: "97.9%", status: "high" },
+      { name: "3. Survey Number", val: "184/A", conf: "99.4%", status: "high" },
+      { name: "4. Khasra / Sub-plot", val: "Sub-plot A", conf: "98.2%", status: "high" },
+      { name: "5. Khata Number", val: "842", conf: "97.5%", status: "high" },
+      { name: "6. Plot Area / Extent", val: "2 Acres 14 Guntas (0.951 Ha)", conf: "99.1%", status: "high" },
+      { name: "7. Village Name", val: "Rustumpet (రుస్తుంపేట్)", conf: "98.8%", status: "high" },
+      { name: "8. Tehsil / Mandal", val: "Narsapur (నర్సాపూర్)", conf: "98.4%", status: "high" },
+      { name: "9. District", val: "Medak (మెదక్)", conf: "99.5%", status: "high" },
+      { name: "10. Land Classification", val: "Dry Agricultural (మెట్ట పట్టా)", conf: "96.7%", status: "high" },
+      { name: "11. Mutation Status", val: "Clean Title (నిరభ్యంతర క్రయవిక్రయం)", conf: "74.2%", status: "low" },
+      { name: "12. Bhu-Aadhaar ULPIN", val: "TS-MED-NAR-184-A01", conf: "99.9%", status: "high" }
+    ],
+    hitlNotice: "Field #11 [Mutation Status] yielded 74.2% confidence due to cursive Telugu ink fading. Officer verification required prior to finalizing Digital RoR.",
+    hitlCorrection: "Clean Title - Unencumbered (నిరభ్యంతర క్రయవిక్రయ అర్హత)"
+  },
+  "hindi-khasra": {
+    header: "मध्य प्रदेश शासन • राजस्व मंडल",
+    sub: "खसरा व खतौनी विवरणी (प्रपत्र सं. 1)",
+    overallConf: "97.8%",
+    marks: {
+      owner: "रामेश्वर दयाल शर्मा",
+      guardian: "पं. शिवनारायण शर्मा",
+      survey: "312/2",
+      area: "1.85 हेक्टेयर (4.57 एकड़)",
+      khata: "514",
+      village: "गोविंदपुर, तहसील हुजूर, भोपाल",
+      mutation: "नामान्तरण स्वीकृत (पंजीकृत)"
+    },
+    fields: [
+      { name: "1. Landowner Details", val: "Rameshwar Dayal Sharma (रामेश्वर दयाल शर्मा)", conf: "98.1%", status: "high" },
+      { name: "2. Father / Guardian", val: "Pt. Shivnarayan Sharma (पं. शिवनारायण)", conf: "97.4%", status: "high" },
+      { name: "3. Survey Number", val: "312/2", conf: "99.0%", status: "high" },
+      { name: "4. Khasra / Sub-plot", val: "Khasra #312 Part 2", conf: "98.5%", status: "high" },
+      { name: "5. Khata Number", val: "514", conf: "96.8%", status: "high" },
+      { name: "6. Plot Area / Extent", val: "1.85 Hectare (4.57 Acre)", conf: "98.9%", status: "high" },
+      { name: "7. Village Name", val: "Govindpur (गोविंदपुर)", conf: "98.2%", status: "high" },
+      { name: "8. Tehsil / Mandal", val: "Huzur (हुजूर)", conf: "97.8%", status: "high" },
+      { name: "9. District", val: "Bhopal (भोपाल)", conf: "99.3%", status: "high" },
+      { name: "10. Land Classification", val: "Agricultural Irrigated (सिंचित भूमि)", conf: "96.4%", status: "high" },
+      { name: "11. Mutation Status", val: "Namantaran Sankhya 412/B (नामान्तरण स्वीकृत)", conf: "76.8%", status: "low" },
+      { name: "12. Bhu-Aadhaar ULPIN", val: "MP-BHO-HUZ-312-002", conf: "99.8%", status: "high" }
+    ],
+    hitlNotice: "Field #11 [Mutation Status] extracted with 76.8% confidence due to stamp overlap on Hindi Devnagari script. Revenue officer signoff needed.",
+    hitlCorrection: "Namantaran Approved Order #412/B (नामान्तरण विधिवत स्वीकृत)"
+  },
+  "ap-adangal": {
+    header: "ఆంధ్రప్రదేశ్ ప్రభుత్వం • రెవెన్యూ రికార్డుల వ్యవస్థ",
+    sub: "గ్రామ అడంగల్ & పహాణీ నకలు (ఫారం నెం. 3)",
+    overallConf: "98.9%",
+    marks: {
+      owner: "కొండపల్లి వెంకటేశ్వరరావు",
+      guardian: "సుబ్బారావు",
+      survey: "93/A",
+      area: "1 ఎకరం 38 సెంట్లు",
+      khata: "412",
+      village: "ఆత్మకూరు, మంగళగిరి, గుంటూరు",
+      mutation: "నిరభ్యంతర (క్లీన్ టైటిల్)"
+    },
+    fields: [
+      { name: "1. Landowner Details", val: "Kondapalli Venkateswara Rao", conf: "99.2%", status: "high" },
+      { name: "2. Father / Guardian", val: "Subba Rao (సుబ్బారావు)", conf: "98.5%", status: "high" },
+      { name: "3. Survey Number", val: "93/A", conf: "99.8%", status: "high" },
+      { name: "4. Khasra / Sub-plot", val: "Plot A-1", conf: "98.9%", status: "high" },
+      { name: "5. Khata Number", val: "412", conf: "98.1%", status: "high" },
+      { name: "6. Plot Area / Extent", val: "1 Acre 38 Cents (0.558 Ha)", conf: "99.4%", status: "high" },
+      { name: "7. Village Name", val: "Atmakuru (ఆత్మకూరు)", conf: "99.0%", status: "high" },
+      { name: "8. Tehsil / Mandal", val: "Mangalagiri (మంగళగిరి)", conf: "98.7%", status: "high" },
+      { name: "9. District", val: "Guntur (గుంటూరు)", conf: "99.6%", status: "high" },
+      { name: "10. Land Classification", val: "Wet Paddy Land (మాగాణి పట్టా)", conf: "97.3%", status: "high" },
+      { name: "11. Mutation Status", val: "Meebhoomi Certified (అడంగల్ రికార్డు సరిచూడబడింది)", conf: "78.4%", status: "low" },
+      { name: "12. Bhu-Aadhaar ULPIN", val: "AP-GUN-MAN-093-A01", conf: "99.9%", status: "high" }
+    ],
+    hitlNotice: "Field #11 [Mutation Status] extracted with 78.4% confidence (marginal low <80%). VRO check recommended.",
+    hitlCorrection: "Meebhoomi Title Validated (అడంగల్ రికార్డు సరిచూడబడింది)"
+  }
+};
+
+let currentOcrSampleKey = "telugu-medak";
+
+function initAiOcrStudio() {
+  const sampleBtns = document.querySelectorAll(".ocr-sample-btn");
+  const runBtn = document.getElementById("run-ocr-pipeline-btn");
+  const hitlApproveBtn = document.getElementById("hitl-approve-btn");
+
+  if (!sampleBtns.length) return;
+
+  renderOcrSample(currentOcrSampleKey);
+
+  sampleBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      sampleBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentOcrSampleKey = btn.getAttribute("data-sample");
+      renderOcrSample(currentOcrSampleKey);
+      showToast(`Loaded ${btn.textContent.trim()}`);
+    });
+  });
+
+  if (runBtn) {
+    runBtn.addEventListener("click", () => {
+      runBtn.disabled = true;
+      runBtn.innerHTML = `<span>⚙️ Executing Indic TrOCR...</span>`;
+      setTimeout(() => {
+        runBtn.disabled = false;
+        runBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Run Indic OCR & Extraction</span>`;
+        renderOcrSample(currentOcrSampleKey);
+        showToast("✓ Indic OCR Pipeline finished: 12 fields classified with LayoutLMv3");
+      }, 1200);
+    });
+  }
+
+  if (hitlApproveBtn) {
+    hitlApproveBtn.addEventListener("click", () => {
+      const input = document.getElementById("hitl-correction-input");
+      const correctedVal = input ? input.value : "Vetted Clean Title";
+      
+      // Update field in current sample
+      const sample = OCR_SAMPLES[currentOcrSampleKey];
+      if (sample && sample.fields[10]) {
+        sample.fields[10].val = correctedVal;
+        sample.fields[10].conf = "99.8%";
+        sample.fields[10].status = "high";
+      }
+
+      // Mark document scan warning mark as verified
+      const mark = document.getElementById("scan-mark-mutation");
+      if (mark) {
+        mark.className = "";
+        mark.textContent = correctedVal;
+      }
+
+      renderOcrFieldsTable(sample.fields);
+
+      const banner = document.getElementById("hitl-alert-box");
+      if (banner) {
+        banner.className = "hitl-alert-banner resolved";
+        banner.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="font-size: 1.5rem; color: var(--accent-green);">✓</div>
+            <div>
+              <strong style="color: var(--accent-green); font-size: 0.95rem;">
+                HITL Verification Complete & Active Learning Buffer Updated!
+              </strong>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                Verified label for Field #11 ingested into continuous retraining loop. Indic-TrOCR model loss reduced by <strong>-0.042</strong>.
+              </p>
+            </div>
+          </div>
+          <span class="conf-pill high">Active Learning Retrained ✓</span>
+        `;
+      }
+
+      showToast("🚀 Active Learning Loop: Verified sample fed back to model training pipeline!");
+    });
+  }
+}
+
+function renderOcrSample(key) {
+  const data = OCR_SAMPLES[key];
+  if (!data) return;
+
+  setText("ocr-doc-header-title", data.header);
+  setText("ocr-doc-header-sub", data.sub);
+  setText("ocr-overall-conf", `Pipeline Conf: ${data.overallConf}`);
+
+  setText("scan-mark-owner", data.marks.owner);
+  setText("scan-mark-guardian", data.marks.guardian);
+  setText("scan-mark-survey", data.marks.survey);
+  setText("scan-mark-area", data.marks.area);
+  setText("scan-mark-khata", data.marks.khata);
+  setText("scan-mark-village", data.marks.village);
+  setText("scan-mark-mutation", data.marks.mutation);
+
+  const mutMark = document.getElementById("scan-mark-mutation");
+  if (mutMark) {
+    mutMark.className = data.fields[10].status === "low" ? "warning-mark" : "";
+  }
+
+  const hitlInput = document.getElementById("hitl-correction-input");
+  if (hitlInput) hitlInput.value = data.hitlCorrection;
+
+  renderOcrFieldsTable(data.fields);
+}
+
+function renderOcrFieldsTable(fields) {
+  const tbody = document.getElementById("ocr-fields-tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = fields.map(f => {
+    let confClass = "high";
+    let statusLabel = `<span style="color: var(--accent-green);">Auto-passed ✓</span>`;
+
+    if (f.status === "low") {
+      confClass = "low";
+      statusLabel = `<span style="color: #f87171; font-weight: 700;">⚠️ HITL Flagged</span>`;
+    } else if (f.status === "med") {
+      confClass = "med";
+      statusLabel = `<span style="color: var(--accent-amber);">Review</span>`;
+    }
+
+    return `
+      <tr>
+        <td><strong>${f.name}</strong></td>
+        <td><span style="font-family: var(--font-mono); font-size: 0.85rem;">${f.val}</span></td>
+        <td><span class="conf-pill ${confClass}">${f.conf}</span></td>
+        <td>${statusLabel}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+/**
+ * ============================================================================
+ * 2. Automated Cross-Verification & Spatial Rule Engine
+ * ============================================================================
+ */
+let isAnomalyActive = false;
+
+function initValidationEngine() {
+  const toggleBtn = document.getElementById("toggle-anomaly-btn");
+  if (!toggleBtn) return;
+
+  toggleBtn.addEventListener("click", () => {
+    isAnomalyActive = !isAnomalyActive;
+    const badge = document.getElementById("sub-plot-badge");
+    const deltaEl = document.getElementById("sub-plot-delta");
+    const bValEl = document.getElementById("sub-plot-b-val");
+
+    if (isAnomalyActive) {
+      // Introduce fraudulent 0.45 Acre encroachment
+      if (badge) {
+        badge.className = "rule-status-badge fail";
+        badge.textContent = "ENCROACHMENT BLOCKED";
+      }
+      if (bValEl) bValEl.innerHTML = `<strong style="color: #f87171;">2.1000 Acres (+0.45 Ac Fraud)</strong>`;
+      if (deltaEl) {
+        deltaEl.style.color = "#f87171";
+        deltaEl.textContent = "+0.4500 Acres Overlap (VIOLATION)";
+      }
+      toggleBtn.textContent = "🔄 Reset to Consistent State (1.65 Ac)";
+      toggleBtn.className = "btn btn-primary";
+      showToast("🚨 Rule Engine Alert: Sub-plot sum exceeds parent survey area! Transaction Blocked!");
+    } else {
+      // Revert to clean mathematical consistency
+      if (badge) {
+        badge.className = "rule-status-badge pass";
+        badge.textContent = "PASSED";
+      }
+      if (bValEl) bValEl.textContent = "1.6500 Acres";
+      if (deltaEl) {
+        deltaEl.style.color = "var(--accent-green)";
+        deltaEl.textContent = "0.0000 Acres (0.00%)";
+      }
+      toggleBtn.textContent = "⚡ Simulate Fraud / Encroachment (+0.45 Ac)";
+      toggleBtn.className = "btn btn-secondary";
+      showToast("✓ Area Consistency Verified: Sub-plots equal parent parcel area (4.00 Ac).");
+    }
+  });
+}
+
+/**
+ * ============================================================================
+ * 3. Government REST API & ULPIN Gateway
+ * ============================================================================
+ */
+const API_ENDPOINTS = {
+  ulpin: {
+    method: "GET",
+    url: "https://api.niriksha.gov.in/api/v1/land/ulpin/TS-MED-NAR-184-A01",
+    curl: "curl -X GET 'https://api.niriksha.gov.in/api/v1/land/ulpin/TS-MED-NAR-184-A01' -H 'Authorization: Bearer NIRIKSHA_GOV_KEY'",
+    response: {
+      status: "SUCCESS",
+      ulpin: "TS-MED-NAR-184-A01",
+      bhu_aadhaar_ver: "2.1",
+      state: "Telangana",
+      district: "Medak",
+      mandal: "Narsapur",
+      village: "Rustumpet",
+      survey_no: "184/A",
+      khata_no: 842,
+      extent_acres: 2.35,
+      extent_sqm: 9510.15,
+      pattadar_name: "Venkateshwarlu Rao",
+      father_name: "Laxmaiah",
+      land_type: "METTA_PATTA (Dry Land)",
+      encumbrance_status: "CLEAN",
+      sec_22a_prohibited: false,
+      centroid: { lat: 17.7382, lng: 78.2828 },
+      spatial_polygon_wkt: "POLYGON((78.2818 17.7375, 78.2838 17.7375, 78.2838 17.7389, 78.2818 17.7389, 78.2818 17.7375))",
+      dharani_synced: true,
+      last_verified_utc: "2026-09-15T18:45:10Z"
+    }
+  },
+  ocr: {
+    method: "POST",
+    url: "https://api.niriksha.gov.in/api/v1/ocr/digitize-deed",
+    curl: "curl -X POST 'https://api.niriksha.gov.in/api/v1/ocr/digitize-deed' -H 'Content-Type: multipart/form-data' -F 'deed_file=@ror_sample.pdf' -F 'target_lang=te'",
+    response: {
+      status: "COMPLETED",
+      model: "Indic-TrOCR-v2-LayoutLMv3",
+      inference_time_ms: 184,
+      pages_scanned: 1,
+      detected_script: "Telugu (te_IN)",
+      extraction_summary: {
+        total_fields_defined: 12,
+        auto_passed_count: 11,
+        hitl_flagged_count: 1,
+        mean_confidence: 0.968
+      },
+      fields: {
+        landowner: { value: "వెంకటేశ్వర్లు రావు", conf: 0.986 },
+        survey_number: { value: "184/A", conf: 0.994 },
+        area_extent: { value: "2 ఎకరాలు 14 గుంటలు", conf: 0.991 },
+        khata_no: { value: "842", conf: 0.975 },
+        mutation_status: { value: "నిరభ్యంతర", conf: 0.742, hitl_required: true }
+      },
+      active_learning_candidate: true
+    }
+  },
+  validate: {
+    method: "POST",
+    url: "https://api.niriksha.gov.in/api/v1/validate/sub-plots",
+    curl: "curl -X POST 'https://api.niriksha.gov.in/api/v1/validate/sub-plots' -H 'Content-Type: application/json' -d '{\"parent_survey\":\"184\",\"parent_area\":4.0,\"sub_plots\":[{\"no\":\"184/A\",\"area\":2.35},{\"no\":\"184/B\",\"area\":1.65}]}'",
+    response: {
+      validation_rule: "SUB_PLOT_SUM_EQUIVALENCE",
+      survey_id: "184",
+      parent_registered_area_ac: 4.0,
+      computed_sub_plots_sum_ac: 4.0,
+      delta_discrepancy_ac: 0.0,
+      is_valid: true,
+      geometric_collision_check: "ZERO_OVERLAP",
+      adjacent_parcels_evaluated: 8,
+      rule_engine_verdict: "APPROVED_FOR_MUTATION"
+    }
+  },
+  audit: {
+    method: "GET",
+    url: "https://api.niriksha.gov.in/api/v1/audit/mutation-trail/184-A",
+    curl: "curl -X GET 'https://api.niriksha.gov.in/api/v1/audit/mutation-trail/184-A' -H 'Authorization: Bearer NIRIKSHA_GOV_KEY'",
+    response: {
+      parcel_id: "184/A",
+      ulpin: "TS-MED-NAR-184-A01",
+      ledger_length: 4,
+      integrity_status: "CRYPTOGRAPHICALLY_VERIFIED",
+      audit_events: [
+        {
+          index: 1,
+          timestamp: "2026-09-14T09:12:00Z",
+          action: "PHYSICAL_ROR_DIGITIZATION",
+          actor: "Patwari_Officer_142",
+          block_hash: "8f4a21b3e9a781c00293da7e4f"
+        },
+        {
+          index: 2,
+          timestamp: "2026-09-15T14:30:15Z",
+          action: "HITL_MUTATION_FLAG_RESOLVED",
+          actor: "Tahsildar_Medak_08",
+          block_hash: "2b9e4a11f7c0018a3d9023ebca"
+        }
+      ]
+    }
+  }
+};
+
+let currentApiKey = "ulpin";
+
+function initApiExplorer() {
+  const tabs = document.querySelectorAll(".api-tab-btn");
+  const executeBtn = document.getElementById("api-execute-btn");
+  const copyCurlBtn = document.getElementById("api-copy-curl-btn");
+
+  if (!tabs.length) return;
+
+  renderApiEndpoint(currentApiKey);
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentApiKey = tab.getAttribute("data-api");
+      renderApiEndpoint(currentApiKey);
+    });
+  });
+
+  if (executeBtn) {
+    executeBtn.addEventListener("click", () => {
+      const codeEl = document.getElementById("api-response-code");
+      const latencyEl = document.getElementById("api-latency-pill");
+      if (codeEl) codeEl.textContent = "// Sending request to Niriksha Gateway...";
+      
+      const randomLatency = Math.floor(Math.random() * 25) + 18;
+      setTimeout(() => {
+        if (latencyEl) latencyEl.textContent = `Latency: ${randomLatency} ms`;
+        renderApiEndpoint(currentApiKey);
+        showToast(`API Call Succeeded (${randomLatency}ms)`);
+      }, 350);
+    });
+  }
+
+  if (copyCurlBtn) {
+    copyCurlBtn.addEventListener("click", () => {
+      const ep = API_ENDPOINTS[currentApiKey];
+      if (ep && ep.curl) {
+        navigator.clipboard.writeText(ep.curl).then(() => {
+          showToast("cURL Command copied to clipboard!");
+        });
+      }
+    });
+  }
+}
+
+function renderApiEndpoint(key) {
+  const ep = API_ENDPOINTS[key];
+  if (!ep) return;
+
+  const methodBadge = document.getElementById("api-badge-method");
+  const urlEl = document.getElementById("api-endpoint-url");
+  const codeEl = document.getElementById("api-response-code");
+
+  if (methodBadge) {
+    methodBadge.textContent = ep.method;
+    methodBadge.className = `api-method-badge ${ep.method.toLowerCase()}`;
+  }
+  if (urlEl) urlEl.textContent = ep.url;
+  if (codeEl) codeEl.textContent = JSON.stringify(ep.response, null, 2);
+}
+
+/**
+ * ============================================================================
+ * 4. Role-Based Access Control (RBAC) & Audit Trail Module
+ * ============================================================================
+ */
+const RBAC_ROLES = {
+  citizen: {
+    name: "Citizen (Public Citizen Viewer)",
+    perms: [
+      { name: "Public Cadastral Map & Parcel Lookup", allowed: true },
+      { name: "Search by Survey No & GPS Coordinates", allowed: true },
+      { name: "Download Public Digitized Passbook Copy", allowed: true },
+      { name: "Upload Scanned Paper Deeds / Documents", allowed: false },
+      { name: "Execute Indic TrOCR Digitization Engine", allowed: false },
+      { name: "Resolve Low-Confidence HITL Flags (<80%)", allowed: false },
+      { name: "Approve Mutation & Digitally Sign RoR", allowed: false },
+      { name: "Modify Active Learning AI Weights & Models", allowed: false }
+    ]
+  },
+  patwari: {
+    name: "Patwari / Village Revenue Officer (VRO)",
+    perms: [
+      { name: "Public Cadastral Map & Parcel Lookup", allowed: true },
+      { name: "Search by Survey No & GPS Coordinates", allowed: true },
+      { name: "Download Public Digitized Passbook Copy", allowed: true },
+      { name: "Upload Scanned Paper Deeds / Documents", allowed: true },
+      { name: "Execute Indic TrOCR Digitization Engine", allowed: true },
+      { name: "Initiate Sub-plot Partition Draft", allowed: true },
+      { name: "Resolve Low-Confidence HITL Flags (<80%)", allowed: false },
+      { name: "Approve Mutation & Digitally Sign RoR", allowed: false }
+    ]
+  },
+  tahsildar: {
+    name: "Tahsildar / Joint Sub-Registrar",
+    perms: [
+      { name: "Public Cadastral Map & Parcel Lookup", allowed: true },
+      { name: "Search by Survey No & GPS Coordinates", allowed: true },
+      { name: "Download Public Digitized Passbook Copy", allowed: true },
+      { name: "Upload Scanned Paper Deeds / Documents", allowed: true },
+      { name: "Execute Indic TrOCR Digitization Engine", allowed: true },
+      { name: "Resolve Low-Confidence HITL Flags (<80%)", allowed: true },
+      { name: "Approve Mutation & Digitally Sign RoR", allowed: true },
+      { name: "Issue 14-Digit Bhu-Aadhaar Certificate", allowed: true }
+    ]
+  },
+  admin: {
+    name: "State LRMS System Administrator",
+    perms: [
+      { name: "Public Cadastral Map & Parcel Lookup", allowed: true },
+      { name: "Search by Survey No & GPS Coordinates", allowed: true },
+      { name: "Upload Scanned Paper Deeds / Documents", allowed: true },
+      { name: "Execute Indic TrOCR Digitization Engine", allowed: true },
+      { name: "Resolve Low-Confidence HITL Flags (<80%)", allowed: true },
+      { name: "Approve Mutation & Digitally Sign RoR", allowed: true },
+      { name: "Modify Active Learning AI Weights & Models", allowed: true },
+      { name: "Manage Enterprise API Keys & Webhooks", allowed: true }
+    ]
+  }
+};
+
+const AUDIT_LOGS = [
+  {
+    time: "2026-09-16 00:22:15",
+    actor: "Tahsildar_Medak_08 (Tahsildar)",
+    action: "RESOLVE_HITL_FLAG (Mutation Status confirmed)",
+    parcel: "TS-MED-NAR-184-A01",
+    hash: "a4f89d31e9c20a8174ef1b93da2780e5"
+  },
+  {
+    time: "2026-09-16 00:18:40",
+    actor: "Patwari_VRO_112 (Patwari)",
+    action: "INDIC_OCR_EXTRACTION (TrOCR Telugu Passbook)",
+    parcel: "TS-MED-NAR-184-A01",
+    hash: "3b71c089fae642d991bce047192a5438"
+  },
+  {
+    time: "2026-09-16 00:11:02",
+    actor: "Citizen_Portal_Public (Citizen)",
+    action: "PUBLIC_GIS_QUERY (GPS: 17.7382, 78.2828)",
+    parcel: "TS-MED-NAR-184-A01",
+    hash: "91e0a5c43d827fbc67104bda92e85419"
+  },
+  {
+    time: "2026-09-15 23:54:19",
+    actor: "StateAdmin_Telangana (Admin)",
+    action: "ACTIVE_LEARNING_SYNC (Gradient update +0.024)",
+    parcel: "SYSTEM_MODEL_WEIGHTS",
+    hash: "f76c0291ba4e311894d0ca8871032bf9"
+  }
+];
+
+function initRbacAndAudit() {
+  const roleBtns = document.querySelectorAll(".role-pill-btn");
+  if (!roleBtns.length) return;
+
+  renderRbacRole("citizen");
+  renderAuditTrailTable();
+
+  roleBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      roleBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const roleKey = btn.getAttribute("data-role");
+      renderRbacRole(roleKey);
+      showToast(`Switched simulation role to ${btn.textContent.trim()}`);
+    });
+  });
+}
+
+function renderRbacRole(key) {
+  const role = RBAC_ROLES[key];
+  if (!role) return;
+
+  setText("rbac-role-name", role.name);
+
+  const grid = document.getElementById("rbac-perm-grid");
+  if (!grid) return;
+
+  grid.innerHTML = role.perms.map(p => `
+    <div class="perm-item-card">
+      <span style="font-size: 0.85rem; color: var(--text-main);">${p.name}</span>
+      ${p.allowed 
+        ? `<span class="rule-status-badge pass" style="font-size: 0.72rem;">PERMITTED ✓</span>`
+        : `<span class="rule-status-badge fail" style="font-size: 0.72rem;">RESTRICTED ✕</span>`
+      }
+    </div>
+  `).join("");
+}
+
+function renderAuditTrailTable() {
+  const tbody = document.getElementById("audit-trail-tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = AUDIT_LOGS.map(log => `
+    <tr>
+      <td style="color: var(--text-muted); font-size: 0.78rem;">${log.time}</td>
+      <td><strong style="color: var(--text-main); font-size: 0.82rem;">${log.actor}</strong></td>
+      <td><span style="color: var(--accent-cyan); font-size: 0.82rem;">${log.action}</span></td>
+      <td><span style="font-family: var(--font-mono); font-size: 0.78rem;">${log.parcel}</span></td>
+      <td><span class="hash-pill">${log.hash}</span></td>
+    </tr>
+  `).join("");
+}
+
